@@ -1,4 +1,4 @@
-import os
+import os, random
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
@@ -14,6 +14,7 @@ async def on_ready():
 
 # MESSAGES
 responses = [
+    [['for the alliance', 'for the king'], 'https://tenor.com/view/halo-halo2-halo-oorah-gif-15782884'],                        #hoorah
     ['documenta', 'https://cdn.discordapp.com/attachments/901521305931747348/968570296678367272/documentary.gif'],              #Jon
     ['sea', 'https://cdn.discordapp.com/attachments/902687545857560646/1022496891658829895/download_1.gif'],                    #the sea is always right
     ['rue', 'https://tenor.com/view/key-thorin-oakenshield-all-those-who-doubted-us-rue-this-day-gif-17140731'],
@@ -34,6 +35,19 @@ responses = [
     ['frontflip', 'https://cdn.discordapp.com/attachments/895064046020202498/922284196871942164/ezgif-5-d8195ff3b7.gif'],       #backflip
     ['flip', 'https://tenor.com/view/trex-backflip-gif-11354213']                                                               #flip
 ]
+reactions = [
+    #flags
+    ['alliance', '<:theAlliance:899087916251353118>'],
+    ['argentin', '🇦🇷'],
+    [['canada', 'canhead'], '🇨🇦'],
+    [['australia', 'didgeridumdum'], '🇦🇺'],
+    [['new zealand', 'kiwi'], '🇳🇿'],
+    [['malta', 'maltesers'], '🇲🇹'],
+    #jerry
+    ['doubt', '<:doubt:922292403627491378>'],
+    ['jerry', '❤️'],
+    ['beans', '<:beans:796047923711836210>'],
+]
 
 @client.listen()
 async def on_message(context):
@@ -44,12 +58,30 @@ async def on_message(context):
     if message.startswith('http'): #ignore links (GIFs)
         return
 
-    #dances  
+    #dance
     if 'dance' in message:
         danceMoves = ['https://cdn.discordapp.com/attachments/901521305931747348/922290586487246888/ezgif-5-be2c8bfa47.gif', 'https://c.tenor.com/b2Fo3D-oA20AAAAC/dinosaur-pole-dance.gif', 'https://tenor.com/view/monty-python-and-the-holy-grail-dance-celebrate-gif-12275693', 'https://tenor.com/view/monty-python-camelot-dance-monty-python-dance-camelot-medieval-gif-17123270', 'https://tenor.com/view/katy-bentz-spin-spinny-dinosaur-gif-23363009', 'https://tenor.com/view/smeagle-gollum-gif-8750815', 'https://tenor.com/view/simba-lion-king-funny-disney-gif-5763716', 'https://tenor.com/view/skyrim-dragon-dance-elder-scrolls-gif-6076592']
         await context.channel.send(random.choice(danceMoves))
         return
 
+    #react to message
+    for reaction in reactions:
+        if (type(reaction[0]) is str):
+            if (reaction[0] in message):
+                try:
+                    await context.add_reaction(reaction[1])
+                except discord.errors.HTTPException:
+                    print(f'Error: Unknown Emoji ({reaction[1]})')
+        else:
+            for prompt in reaction[0]:
+                if (prompt in message):
+                    try:
+                        await context.add_reaction(reaction[1])
+                    except discord.errors.HTTPException:
+                        print(f'Error: Unknown Emoji ({reaction[1]})')
+                    break
+
+    #respond to message
     for response in responses:
         if (type(response[0]) is str):
             if (response[0] in message):
