@@ -1,11 +1,13 @@
 import os, random
 import discord
 from discord.ext import commands
+from discord.ext.commands import has_permissions, MissingPermissions
 from dotenv import load_dotenv
 
 load_dotenv('token.env')
 
 intents = discord.Intents.default()
+intents.members = True
 client = commands.Bot(intents=intents, command_prefix='!', help_command=None, case_insensitive=True)
 
 @client.listen()
@@ -57,6 +59,32 @@ async def on_message(context):
         return
     if message.startswith('http'): #ignore links (GIFs)
         return
+
+    #bonk
+    if 'jerry' in message and 'bonk' in message:
+        keynote = None
+        if '<@!' in str(message):
+            keynote = '!'
+        elif '<@' in str(message):
+            keynote = '@'
+
+        if (keynote != None):
+
+            #get target id
+            msg = str(message)
+            temp = ''
+            flag = False
+            for i in range(len(msg)):
+                if msg[i] == keynote:
+                    flag = True
+                    continue
+                if flag:
+                    if msg[i] == '>':
+                        break
+                    else:
+                        temp += msg[i]
+            id = int(temp)
+            await bonk(context, f'<@{id}>')
 
     #dance
     if 'dance' in message:
@@ -122,6 +150,24 @@ async def on_reaction_add(reaction, user):
         return
 
 # COMMANDS
+## HELP
+@client.command()
+async def help(context):
+    embed = discord.Embed(title="What can men do against such reckless hate?", color=discord.Color.red())
+    
+    embed.add_field(name="!help", 
+					value="❓")
+    embed.add_field(name="!ping, !pong", 
+					value="🏓")
+    embed.add_field(name="!dance", 
+					value="🎉")
+    embed.add_field(name="!pick a,b,...", 
+					value="❔")
+    embed.add_field(name="!bonk @", 
+					value="<:bonk:798539206901235773>")
+    await context.channel.send(embed=embed)
+
+## PING, PONG
 @client.command()
 async def ping(context):
     await context.send('pong!')
@@ -129,5 +175,82 @@ async def ping(context):
 async def pong(context):
     await context.send('ping!')
 
+## PICK
+@client.command()
+async def pick(context, *, arg):
+    args = arg.split(',')
+
+    if (len(args) == 0):
+        await context.channel.send('Is this some kind of trick question..?')
+    elif (len(args) == 1):
+        await context.channel.send("Hmm.. that's a _really_ tough one.")
+        await context.channel.send(args[0])
+    else:
+        await context.channel.send(random.choice(args))
+
+## BONK
+@client.command(pass_context=True)
+@has_permissions(administrator=True)
+async def bonk(context, arg=None):
+
+    if (arg == None): #no person to bonk
+        try:
+            await context.message.add_reaction('<:bonk:798539206901235773>')
+        except:
+            await context.message.add_reaction('👎')
+
+    else:
+        id = None
+        try:
+            id = int(arg.strip('<@!>'))
+        except ValueError:
+            pass #ignore this error, user will be null
+
+        bonkRole = discord.utils.get(context.guild.roles, name='Bonk Jail')
+        user = context.guild.get_member(id)
+
+        if (user == None): #user does not exist, or is not in guild
+            print('Invalid user')
+            return
+            
+        if (bonkRole == None): #bonk role does not exist
+            #TODO: create role if able
+            print("Role 'Bonk Jail' does not exist")
+            await context.channel.send('<:bonk:798539206901235773>')
+            return
+        elif (bonkRole in user.roles): #already bonked (unbonk)
+            await user.remove_roles(bonkRole)
+            await context.channel.send("https://tenor.com/view/gandalf-theoden-king-meduseld-two-towers-gif-22261302") #I release you
+        else:
+            await user.add_roles(bonkRole)
+            #original channel
+            await context.channel.send('<:bonk:798539206901235773>')
+            if random.randint(0, 5) <= 2:
+                await context.channel.send('https://www.youtube.com/watch?v=2D7P1khV40U')
+            
+            #bonk-jail
+            bonkJail = discord.utils.get(context.guild.channels, name="bonk-jail")
+            if (bonkJail == None): #bonk-jail channel does not exist
+                #TODO: create channel if able
+                print("'#bonk-jail' channel does not exist")
+                return
+
+            await bonkJail.send(f'<@{id}>')
+            responses = ['https://c.tenor.com/TCcLhuhnNHoAAAAd/captain-america.gif', 'https://tenor.com/view/lion-king-scar-hes-not-one-ofus-leaving-gif-15363945', 'https://tenor.com/view/lion-king-deception-disgrace-gif-18508159', 'https://open.spotify.com/track/6Y4rDNttdC0T5hDImzjaSJ?si=10f2f9a58c3c4c27']
+            await bonkJail.send(random.choice(responses))
+            
+
+@bonk.error
+async def kick_error(error, context):
+    if isinstance(error, MissingPermissions):
+        try:
+            await context.message.add_reaction('<:ekkydisapproves:876951860144144454>')
+        except:
+            await context.message.add_reaction('👎')
+        await context.channel.send('https://tenor.com/view/lotr-lord-of-the-rings-theoden-king-of-rohan-you-have-no-power-here-gif-4952489')
+    else:
+        raise error
+
+# MAIN
 TOKEN = os.environ.get('DISCORD_BOT_TOKEN')
 client.run(TOKEN)
