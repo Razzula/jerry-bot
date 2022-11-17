@@ -81,6 +81,27 @@ async def on_message(context):
                         print(f'Error: Unknown Emoji ({reaction[1]})')
                     break
 
+    #words of wisdom
+    if 'jerry' in message and 'wis' in message:
+        try:
+            file = open('fortune.txt', 'r')
+            options = []
+            for line in file:
+                line = line.rstrip() + ' '
+                if line != ' ' and line[0] != '#':
+                    options.append(line)
+
+            l = len(options) - 1
+            n = random.randint(0, l)
+            if "{}" in options[n]:
+                options[n] = options[n].format("<@" + str(context.author.id) + ">")
+            await context.channel.send(options[n])
+            return
+        except IOError:
+            print("Error: fortune.txt is blank")
+        await context.channel.send("Hmm. I can't think of anything... 🤔")
+        return
+
     #respond to message
     for response in responses:
         if (type(response[0]) is str):
