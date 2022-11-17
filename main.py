@@ -6,9 +6,12 @@ from dotenv import load_dotenv
 
 load_dotenv('token.env')
 
+# GLOBALS
 intents = discord.Intents.default()
 intents.members = True
 client = commands.Bot(intents=intents, command_prefix='!', help_command=None, case_insensitive=True)
+
+botsChannel = None
 
 @client.listen()
 async def on_ready():
@@ -145,11 +148,22 @@ async def on_message(context):
 # REACTIONS
 @client.listen()
 async def on_reaction_add(reaction, user):
-
     if user == client.user: #ignore self
         return
 
 # COMMANDS
+#enforce use of #bots channel
+@client.before_invoke
+async def common(context):
+    global botsChannel
+    botsChannel = discord.utils.get(context.guild.channels, name="bots")
+    if (botsChannel):
+        if (context.channel != botsChannel):
+            await context.message.delete() #delete message  #TODO: this breaks commands that rely on reactions (bonk)
+            await botsChannel.send(f'<@{context.author.id}>')
+    else:
+        botsChannel = context.channel
+
 ## HELP
 @client.command()
 async def help(context):
@@ -165,15 +179,15 @@ async def help(context):
 					value="❔")
     embed.add_field(name="!bonk @", 
 					value="<:bonk:798539206901235773>")
-    await context.channel.send(embed=embed)
+    await botsChannel.send(embed=embed)
 
 ## PING, PONG
 @client.command()
 async def ping(context):
-    await context.send('pong!')
+    await botsChannel.send('pong!')
 @client.command()
 async def pong(context):
-    await context.send('ping!')
+    await botsChannel.send('ping!')
 
 ## PICK
 @client.command()
@@ -181,12 +195,12 @@ async def pick(context, *, arg):
     args = arg.split(',')
 
     if (len(args) == 0):
-        await context.channel.send('Is this some kind of trick question..?')
+        await botsChannel.send('Is this some kind of trick question..?')
     elif (len(args) == 1):
-        await context.channel.send("Hmm.. that's a _really_ tough one.")
-        await context.channel.send(args[0])
+        await botsChannel.send("Hmm.. that's a _really_ tough one.")
+        await botsChannel.send(args[0])
     else:
-        await context.channel.send(random.choice(args))
+        await botsChannel.send(random.choice(args))
 
 ## BONK
 @client.command(pass_context=True)
