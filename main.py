@@ -177,17 +177,26 @@ async def on_reaction_add(reaction, user):
         return
 
 # COMMANDS
-#enforce use of #bots channel
+#enforce command restrictions
 @client.before_invoke
 async def common(context):
     global botsChannel
-    botsChannel = discord.utils.get(context.guild.channels, name="bots")
-    if (botsChannel):
-        if (context.channel != botsChannel):
-            await context.message.delete() #delete message  #TODO: this breaks commands that rely on reactions (bonk)
-            await botsChannel.send(f'<@{context.author.id}>')
+
+    #bonk prevents commands
+    bonkRole = discord.utils.get(context.guild.roles, name='Bonk Jail')
+    if (bonkRole in context.author.roles):
+        await context.channel.send('https://tenor.com/view/lotr-lord-of-the-rings-theoden-king-of-rohan-you-have-no-power-here-gif-4952489')
+        raise PermissionError #TODO: find a better solution
+
+    #enforce use of #bots
     else:
-        botsChannel = context.channel
+        botsChannel = discord.utils.get(context.guild.channels, name="bots")
+        if (botsChannel):
+            if (context.channel != botsChannel):
+                await context.message.delete() #delete message  #TODO: this breaks commands that rely on reactions (bonk)
+                await botsChannel.send(f'<@{context.author.id}>')
+        else:
+            botsChannel = context.channel
 
 ## HELP
 @client.command()
@@ -260,7 +269,6 @@ async def bonk(context, arg=None):
             #TODO: create role if (able
             print("Role 'Bonk Jail' does not exist")
             await context.channel.send('<:bonk:798539206901235773>')
-            return
         elif (bonkRole in user.roles): #already bonked (unbonk)
             await user.remove_roles(bonkRole)
             await context.channel.send("https://tenor.com/view/gandalf-theoden-king-meduseld-two-towers-gif-22261302") #I release you
@@ -279,8 +287,8 @@ async def bonk(context, arg=None):
                 return
 
             await bonkJail.send(f'<@{id}>')
-            responses = ['https://c.tenor.com/TCcLhuhnNHoAAAAd/captain-america.gif', 'https://tenor.com/view/lion-king-scar-hes-not-one-ofus-leaving-gif-15363945', 'https://tenor.com/view/lion-king-deception-disgrace-gif-18508159', 'https://open.spotify.com/track/6Y4rDNttdC0T5hDImzjaSJ?si=10f2f9a58c3c4c27']
-            await bonkJail.send(random.choice(responses))
+            await bonkJail.send(random.choice(['https://c.tenor.com/TCcLhuhnNHoAAAAd/captain-america.gif', 'https://tenor.com/view/lion-king-scar-hes-not-one-ofus-leaving-gif-15363945', 'https://tenor.com/view/lion-king-deception-disgrace-gif-18508159', 'https://open.spotify.com/track/6Y4rDNttdC0T5hDImzjaSJ?si=10f2f9a58c3c4c27']))
+        return
             
 
 @bonk.error
@@ -423,6 +431,6 @@ def getTagFromMessage(message):
         return int(temp)
     return None
 
-# MAIN
+# MAIN ---
 TOKEN = os.environ.get('DISCORD_BOT_TOKEN')
 client.run(TOKEN)
