@@ -1,4 +1,4 @@
-import os, random
+import os, random, time
 import discord
 from discord.ext import commands
 from discord.ext.commands import has_permissions, MissingPermissions
@@ -21,6 +21,7 @@ async def on_ready():
 
 # MESSAGES
 responses = [
+    ["what'd you tell me", 'You wanna win and walk away?'],                                                                     #andor
     [['for the alliance', 'for the king'], 'https://tenor.com/view/halo-halo2-halo-oorah-gif-15782884'],                        #hoorah
     ['documenta', 'https://cdn.discordapp.com/attachments/901521305931747348/968570296678367272/documentary.gif'],              #Jon
     ['sea', 'https://cdn.discordapp.com/attachments/902687545857560646/1022496891658829895/download_1.gif'],                    #the sea is always right
@@ -65,39 +66,56 @@ async def on_message(context):
     if (message.startswith('http')): #ignore links (GIFs)
         return
 
-    #bonk
+    ##TAG
+    shouldRespond = False
+    user = context.guild.get_member(getTagFromMessage(message))
+    if (user != None):
+
+        if (user.id == client.user.id): #if self is tagged
+            if (random.randint(0, 100) < 40): #40%
+                shouldRespond = True
+            else:
+                shouldRespond= False
+
+        tagRole = discord.utils.get(context.guild.roles, name='It')
+        if ((tagRole != None) and (tagRole in context.author.roles)):
+            
+            playerRole = discord.utils.get(context.guild.roles, name='PlayingTag')
+            if ((playerRole == None) or (playerRole in user.roles)):
+                
+                #remove role
+                await context.author.remove_roles(tagRole)
+
+                #assign role
+                if (user.id == client.user.id): #if self is tagged
+                    await user.add_roles(tagRole)
+
+                    if shouldRespond:
+                        await context.channel.send(random.choice(['https://tenor.com/view/starwars-han-solo-tag-youre-it-stormtrooper-gif-20240479', 'https://tenor.com/view/monty-python-holy-grail-horse-on-my-way-omw-gif-13663405', 'https://imgur.com/VVMZWAn', 'https://tenor.com/view/halo-master-chief-halo-infinite-xbox-xbox-series-x-gif-19586612']))
+                        shouldRespond = False
+
+                    time.sleep(2)
+                    await user.remove_roles(tagRole)
+
+                    n = context.guild.member_count - 1
+                    while ((playerRole not in user.roles) or (user.id == client.user.id)): #no tagging non-players, or self
+                        user = context.guild.members[random.randint(0, n)]
+
+                    await context.channel.send(f'<@{user.id}>')
+                await user.add_roles(tagRole)
+
+    ##BONK
     if ('jerry' in message and 'bonk' in message):
-        keynote = None
-        if ('<@!' in str(message)):
-            keynote = '!'
-        elif ('<@' in str(message)):
-            keynote = '@'
+        id = getTagFromMessage(message)
+        await bonk(context, f'<@{id}>')
 
-        if (keynote != None):
-
-            #get target id
-            msg = str(message)
-            temp = ''
-            flag = False
-            for i in range(len(msg)):
-                if (msg[i] == keynote):
-                    flag = True
-                    continue
-                if (flag):
-                    if (msg[i] == '>'):
-                        break
-                    else:
-                        temp += msg[i]
-            id = int(temp)
-            await bonk(context, f'<@{id}>')
-
-    #dance
+    ##DANCE
     if ('dance' in message):
         danceMoves = ['https://cdn.discordapp.com/attachments/901521305931747348/922290586487246888/ezgif-5-be2c8bfa47.gif', 'https://c.tenor.com/b2Fo3D-oA20AAAAC/dinosaur-pole-dance.gif', 'https://tenor.com/view/monty-python-and-the-holy-grail-dance-celebrate-gif-12275693', 'https://tenor.com/view/monty-python-camelot-dance-monty-python-dance-camelot-medieval-gif-17123270', 'https://tenor.com/view/katy-bentz-spin-spinny-dinosaur-gif-23363009', 'https://tenor.com/view/smeagle-gollum-gif-8750815', 'https://tenor.com/view/simba-lion-king-funny-disney-gif-5763716', 'https://tenor.com/view/skyrim-dragon-dance-elder-scrolls-gif-6076592']
         await context.channel.send(random.choice(danceMoves))
         return
 
-    #react to message
+    ##REACT
     for reaction in reactions:
         if (type(reaction[0]) is str):
             if (reaction[0] in message):
@@ -114,59 +132,12 @@ async def on_message(context):
                         print(f'Error: Unknown Emoji ({reaction[1]})')
                     break
 
-    #decide game to play
+    ##DECIDE STEAM GAME
     if ('jerry' in message and 'deci' in message):
-        global deciCache
-
-        #get users in vc
-        activeUsers = []
-        if (context.author.voice == None):
-            print('no vc')
-            await context.channel.send("You're not in a voice channel")
-            return
-        
-        vc = context.author.voice.channel
-        for user in vc.members:
-            activeUsers.append(str(user.id))
-
-        #get steam ids from list
-        file = open('steamIDs.txt', 'r')
-        users = []
-        for line in file:
-            data = line[0:36].split(':')
-            if (data[0] in activeUsers):
-                users.append(data[1])
-
-        if (users == []):
-            print('no steam valid users')
-            await context.channel.send('No valid Steam users found. Use `!steam <your_steam_id>` to resolve this.')
-            return
-
-        #get shared game library
-        games = []
-        if (users == deciCache[0]):
-            games = deciCache[1].copy()
-        else:
-            games = steamAPI.getSharedLibrary(users)
-            deciCache[0] = users.copy()
-            deciCache[1] = games.copy()
-
-        #select game
-        if (deciCache[1] == [None]):
-            print('no steam valid users')
-            await context.channel.send('No valid Steam users found. Use `!steam <your_steam_id>` to resolve this.')
-        elif (deciCache[1] == []):
-            print('no shared games')
-            await context.channel.send("You don't have any games in common.")
-        else:
-            try:
-                game = steamAPI.getGame(games, multiplayer=(len(users) > 1)) #game must be multi-player if multiple users
-                await context.channel.send(game)
-            except:
-                await context.channel.send("uh oh, I broke")
+        await decide(context)
         return
 
-    #words of wisdom
+    ##WORDS OF WISDOM
     if (('jerry' in message) and ('wis' in message)):
         try:
             file = open('fortune.txt', 'r')
@@ -187,7 +158,7 @@ async def on_message(context):
         await context.channel.send("Hmm. I can't think of anything... 🤔")
         return
 
-    #respond to message
+    ##RESPOND
     for response in responses:
         if (type(response[0]) is str):
             if (response[0] in message):
@@ -231,10 +202,12 @@ async def help(context):
 					value="🎉")
     embed.add_field(name="!pick a,b,...", 
 					value="❔")
+    embed.add_field(name="!decide", 
+					value="<:steam:1042900928048681030>")
+    embed.add_field(name="!steam <id>", 
+					value="<:steam:1044305789554266162>")
     embed.add_field(name="!bonk @", 
 					value="<:bonk:798539206901235773>")
-    embed.add_field(name="!steam <id>", 
-					value="<:steam:1042900928048681030>")
     await botsChannel.send(embed=embed)
 
 ## PING, PONG
@@ -321,6 +294,58 @@ async def kick_error(error, context):
     else:
         raise error
 
+## DECIDE
+@client.command(pass_context=True)
+async def decide(context):
+    global deciCache
+
+    #get users in vc
+    activeUsers = []
+    if (context.author.voice == None):
+        print('no vc')
+        await context.channel.send("You're not in a voice channel")
+        return
+    
+    vc = context.author.voice.channel
+    for user in vc.members:
+        activeUsers.append(str(user.id))
+
+    #get steam ids from list
+    file = open('steamIDs.txt', 'r')
+    users = []
+    for line in file:
+        data = line[0:36].split(':')
+        if (data[0] in activeUsers):
+            users.append(data[1])
+
+    if (users == []):
+        print('no steam valid users')
+        await context.channel.send('No valid Steam users found. Use `!steam <your_steam_id>` to resolve this.')
+        return
+
+    #get shared game library
+    games = []
+    if (users == deciCache[0]):
+        games = deciCache[1].copy()
+    else:
+        games = steamAPI.getSharedLibrary(users)
+        deciCache[0] = users.copy()
+        deciCache[1] = games.copy()
+
+    #select game
+    if (deciCache[1] == [None]):
+        print('no steam valid users')
+        await context.channel.send('No valid Steam users found. Use `!steam <your_steam_id>` to resolve this.')
+    elif (deciCache[1] == []):
+        print('no shared games')
+        await context.channel.send("You don't have any games in common.")
+    else:
+        try:
+            game = steamAPI.getGame(games, multiplayer=(len(users) > 1)) #game must be multi-player if multiple users
+            await context.channel.send(game)
+        except:
+            await context.channel.send("uh oh, I broke")
+
 ## STEAM
 @client.command(pass_context=True)
 async def steam(context, arg=None):
@@ -330,7 +355,11 @@ async def steam(context, arg=None):
         except:
             await context.message.add_reaction('👎')
     else:
-        #TODO: validate keys using API
+        #validate keys using API
+        username = steamAPI.isValidUser(arg)
+        if (not username):
+            await botsChannel.send(f'`{arg}` is not a valid Steam ID')
+
         #store id in steamIDs.txt
         lines = []
         user = str(context.author.id)
@@ -343,7 +372,7 @@ async def steam(context, arg=None):
             for line in file:
                 data = line.split(':')
                 if (data[0] == user):
-                    lines.append(user + ':' + arg + '\n')
+                    lines.append(f'{user}:{arg}\t#{username}\n')
                     flag = True
                 else:
                     lines.append(line)
@@ -358,7 +387,41 @@ async def steam(context, arg=None):
             file.write('\n' + user + ':' + arg)
         file.close()
 
+        
         await context.message.add_reaction('👍')
+        await botsChannel.send(f'<@{context.author.id}> linked to <:steam:1044305789554266162>{username}')
+
+##LEADERBOARD
+@client.command()
+async def l(context):
+    await botsChannel.send('Sorry, I forgot to pack the leaderboard when I moved out of my place at Amazon.. so `!l` no longer functions.')
+
+# GENERAL FUNCTIONS
+# common processes shared among features
+def getTagFromMessage(message):
+    keynote = None
+    if ('<@!' in str(message)):
+        keynote = '!'
+    elif ('<@' in str(message)):
+        keynote = '@'
+
+    if (keynote != None):
+
+        #get target id
+        msg = str(message)
+        temp = ''
+        flag = False
+        for i in range(len(msg)):
+            if (msg[i] == keynote):
+                flag = True
+                continue
+            if (flag):
+                if (msg[i] == '>'):
+                    break
+                else:
+                    temp += msg[i]
+        return int(temp)
+    return None
 
 # MAIN
 TOKEN = os.environ.get('DISCORD_BOT_TOKEN')

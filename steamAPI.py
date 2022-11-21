@@ -95,3 +95,14 @@ def getGame(games, multiplayer):
 
     print(result[str(id)]['data']['name'])
     return result[str(id)]['data']['name']
+
+def isValidUser(id):
+    response = GET('https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key='+key+'&steamids='+id+'&format=json')
+    if (response.status_code != 200):
+        return False
+
+    result = response.json()
+    if (len(result['response']['players']) <= 0):
+        return False
+
+    return result['response']['players'][0]['personaname']
