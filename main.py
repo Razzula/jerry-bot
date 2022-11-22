@@ -3,6 +3,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import has_permissions, MissingPermissions
 from dotenv import load_dotenv
+from datetime import datetime
 import steamAPI
 
 load_dotenv('token.env')
@@ -19,9 +20,16 @@ deciCache  = [None, None]
 async def on_ready():
     print('Logged in as {0.user}\n'.format(client))
 
+    today = datetime.now()
+    if ((today.month == 12) and (today.day <= 14)): #JINGLE JAM
+        await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Jingle Jam"))
+    else:
+        await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="Baba Yetu"))
+
 # MESSAGES
 responses = [
-    ['lotr bad', 'https://media.tenor.com/qRXLEt2PRDYAAAAC/gandalf-keep.gif']                                                   #forked tongue
+    ['lotr bad', 'https://media.tenor.com/qRXLEt2PRDYAAAAC/gandalf-keep.gif'],                                                  #forked tongue
+    [['circadian', 'sympathetic nerve'], 'https://media.tenor.com/runLaIlilAUAAAAC/gandalf-paper.gif'],                         #josh reading a book
     ['deforestation', 'https://tenor.com/view/barbalbero-treebeard-lotr-lord-of-the-rings-ent-gif-17533852'],                   #treebeard
     ["what'd you tell me", 'You wanna win and walk away?'],                                                                     #andor
     [['for the alliance', 'for the king'], 'https://tenor.com/view/halo-halo2-halo-oorah-gif-15782884'],                        #hoorah
@@ -355,6 +363,13 @@ async def decide(context):
     else:
         try:
             game = steamAPI.getGame(games, multiplayer=(len(users) > 1)) #game must be multi-player if multiple users
+
+            #passive aggressive
+            boatBois = ["Don't Starve Together","The Elder Scrolls Online","Barotrauma"]
+            if (('524255350182903838' not in users) and (game in boatBois)):
+                game += ' \*cough* <@!524255350182903838> \*cough*'
+
+            #output result
             await context.channel.send(game)
         except:
             await context.channel.send("uh oh, I broke")
