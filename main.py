@@ -28,8 +28,10 @@ async def on_ready():
 
 # MESSAGES
 responses = [
+    ['where did you ', 'https://cdn.discordapp.com/attachments/1042840873714593843/1046228124284747928/Man_of_Steel_1080p_I_was_bred_to_be_a_warrior_Kal_Trained_my.gif'],    #zod
+    ['ride', 'https://cdn.discordapp.com/attachments/901521305931747348/1046164201867051018/ride_now_ride_for_ruin_and_the_worlds_ending.gif'], #did you say ride?
     ['lotr bad', 'https://media.tenor.com/qRXLEt2PRDYAAAAC/gandalf-keep.gif'],                                                  #forked tongue
-    [['circadian', 'sympathetic nerve'], 'https://media.tenor.com/runLaIlilAUAAAAC/gandalf-paper.gif'],                         #josh reading a book
+    [['circadian', 'sympathetic nerve', 'rem', 'read a book'], 'https://media.tenor.com/runLaIlilAUAAAAC/gandalf-paper.gif'],   #josh reading a book
     ['deforestation', 'https://tenor.com/view/barbalbero-treebeard-lotr-lord-of-the-rings-ent-gif-17533852'],                   #treebeard
     ["what'd you tell me", 'You wanna win and walk away?'],                                                                     #andor
     [['for the alliance', 'for the king'], 'https://tenor.com/view/halo-halo2-halo-oorah-gif-15782884'],                        #hoorah
@@ -122,6 +124,14 @@ async def on_message(context):
         id = getTagFromMessage(message)
         await bonk(context, f'<@{id}>')
 
+    ##BONK
+    if ('jerry' in message and 'summon' in message):
+        if ('@everyone' in message):
+            await summon(context, '@everyone')
+        else:
+            id = getTagFromMessage(message)
+            await summon(context, f'<@{id}>')
+
     ##DANCE
     if ('dance' in message):
         danceMoves = ['https://cdn.discordapp.com/attachments/901521305931747348/922290586487246888/ezgif-5-be2c8bfa47.gif', 'https://c.tenor.com/b2Fo3D-oA20AAAAC/dinosaur-pole-dance.gif', 'https://tenor.com/view/monty-python-and-the-holy-grail-dance-celebrate-gif-12275693', 'https://tenor.com/view/monty-python-camelot-dance-monty-python-dance-camelot-medieval-gif-17123270', 'https://tenor.com/view/katy-bentz-spin-spinny-dinosaur-gif-23363009', 'https://tenor.com/view/smeagle-gollum-gif-8750815', 'https://tenor.com/view/simba-lion-king-funny-disney-gif-5763716', 'https://tenor.com/view/skyrim-dragon-dance-elder-scrolls-gif-6076592', 'https://media.tenor.com/VNcLWS_jDR8AAAAC/bluey-dance.gif']
@@ -193,6 +203,12 @@ async def on_reaction_add(reaction, user):
 #enforce command restrictions
 @client.before_invoke
 async def common(context):
+
+    whitelist = ['summon']
+    for item in whitelist:
+        if (item in context.message.content):
+            return
+
     global botsChannel
 
     #bonk prevents commands
@@ -230,6 +246,8 @@ async def help(context):
 					value="<:steam:1044305789554266162>")
     embed.add_field(name="!bonk @", 
 					value="<:bonk:798539206901235773>")
+    embed.add_field(name="!summon @", 
+					value="🎺")
     await botsChannel.send(embed=embed)
 
 ## PING, PONG
@@ -424,6 +442,27 @@ async def steam(context, arg=None):
 async def l(context):
     await botsChannel.send('Sorry, I forgot to pack the leaderboard when I moved out of my place at Amazon.. so `!l` no longer functions.')
 
+##SUMMON
+@client.command(pass_context=True)
+async def summon(context, arg=None):
+
+    if (arg == None): #no person to bonk
+        try:
+            await context.message.add_reaction('<:bonk:798539206901235773>')
+        except:
+            await context.message.add_reaction('👎')
+
+    elif (('<@' in arg) or (arg == '@everyone')):
+        try:
+            await context.message.delete() #! not subtle
+        except:
+            pass
+
+        await context.channel.send(arg)
+        await context.channel.send(random.choice(['https://thehuffmanpost.files.wordpress.com/2019/07/ecc86735e2d3ee72317cfeb75d9d030746e87987c5610a17f604807870f763f4_1.gif?w=322&h=177', 'https://tenor.com/view/lord-of-the-rings-summon-fulfill-oath-pledge-gif-22388472'])) #eomer, aragorn
+    else:
+        await context.message.add_reaction('❓')
+
 # GENERAL FUNCTIONS
 # common processes shared among features
 def getTagFromMessage(message):
@@ -448,7 +487,11 @@ def getTagFromMessage(message):
                     break
                 else:
                     temp += msg[i]
-        return int(temp)
+        try:
+            temp = int(temp)
+        except:
+            pass
+        return temp
     return None
 
 # MAIN ---
