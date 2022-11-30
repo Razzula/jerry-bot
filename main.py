@@ -20,10 +20,25 @@ deciCache  = [None, None]
 async def on_ready():
     print('Logged in as {0.user}\n'.format(client))
 
+
     today = datetime.now()
-    if ((today.month == 12) and (today.day <= 14)): #JINGLE JAM
-        await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Jingle Jam"))
+    if (today.month == 12): #CHRISTMAS
+        with open('pfp/jerry-festag.png', 'rb') as image:
+            await client.user.edit(avatar=image.read())
+
+        if (today.day <= 14): #JINGLE JAM
+            await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Jingle Jam"))
+        else:
+            christmasSongs = ['Fairytale of New York','Jingle Bells','Last Christmas','Feliz Navidad','The Little Drummer Boy','White Christmas','Mariah Carey']
+            await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=random.choice(christmasSongs)))
+
+    elif ((today.month == 5) and (today.day == 4)): #MAY THE 4TH
+        await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="Baba Yetu"))
+        
     else:
+        with open('pfp/jerry.png', 'rb') as image:
+            await client.user.edit(avatar=image.read())
+
         await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="Baba Yetu"))
 
 # MESSAGES
