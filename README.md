@@ -1,6 +1,7 @@
 # jerry-bot
 
 ### Privileged Gateway Intents
+- PRESENCE INTENT
 - SERVER MEMBERS INTENT
 - MESSAGE CONTENT INTENT
 

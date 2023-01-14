@@ -3,18 +3,28 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import has_permissions, MissingPermissions
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime, timedelta
 import steamAPI
 
 load_dotenv('token.env')
 
+class ThisNeedsAName:
+    def __init__(self, user, guild, channel) -> None:
+        self.user = user
+        self.guild = guild
+        self.channel = channel
+        self.time = datetime.now()
+
 # GLOBALS
 intents = discord.Intents.default()
 intents.members = True
+intents.presences = True
 client = commands.Bot(intents=intents, command_prefix='!', help_command=None, case_insensitive=True)
 
 botsChannel = None
 deciCache  = [None, None]
+
+waiting = []
 
 @client.listen()
 async def on_ready():
@@ -46,7 +56,7 @@ responses = [
     ['where did you ', 'https://cdn.discordapp.com/attachments/1042840873714593843/1046228124284747928/Man_of_Steel_1080p_I_was_bred_to_be_a_warrior_Kal_Trained_my.gif'],    #zod
     ['ride', 'https://cdn.discordapp.com/attachments/901521305931747348/1046164201867051018/ride_now_ride_for_ruin_and_the_worlds_ending.gif'], #did you say ride?
     ['lotr bad', 'https://media.tenor.com/qRXLEt2PRDYAAAAC/gandalf-keep.gif'],                                                  #forked tongue
-    [['circadian', 'sympathetic nerve', 'rem', 'read a book'], 'https://media.tenor.com/runLaIlilAUAAAAC/gandalf-paper.gif'],   #josh reading a book
+    [['circadian', 'sympathetic nerve', 'rem ', 'read a book'], 'https://media.tenor.com/runLaIlilAUAAAAC/gandalf-paper.gif'],   #josh reading a book
     ['deforestation', 'https://tenor.com/view/barbalbero-treebeard-lotr-lord-of-the-rings-ent-gif-17533852'],                   #treebeard
     ["what'd you tell me", 'You wanna win and walk away?'],                                                                     #andor
     [['for the alliance', 'for the king'], 'https://tenor.com/view/halo-halo2-halo-oorah-gif-15782884'],                        #hoorah
@@ -60,6 +70,7 @@ responses = [
     ['vexor', 'https://c.tenor.com/RaG9beTFOSMAAAAC/batman-vs.gif'],                                                            #why did you say that name?
     ['jahan', 'https://tenor.com/view/legolas-the-lord-of-rings-gif-23169554'],                                                 #the white wizard
     ['die', 'https://64.media.tumblr.com/c3af27aefc0d51d80754d7b1158ae696/tumblr_moj2ur3xxU1qelmhao6_250.gif'],                 #then I shall die as one of them
+    ['weevil', 'https://cdn.discordapp.com/attachments/1042840873714593843/1047539453226401822/lesser_of_two_weevils.gif'],     #master and commander
     [' late', 'https://i.giphy.com/media/HVaHPyE3DUFW/giphy.webp'],                                                             #a wizard is never late
     ['i wish', 'https://64.media.tumblr.com/56a1245360562846c1a04dc6dd25ff50/9b20e3deca4fcdc8-2e/s540x810/87425a55dd09fa3aa8a3cd7bb8732dede693913e.gif'], #so do all
     ['one day', 'https://tenor.com/view/aragorn-but-notthis-day-lotr-gif-14120761'],                                                #but it is not this day
@@ -67,7 +78,8 @@ responses = [
     ['you have my ', 'https://tenor.com/view/axe-lotr-gif-5532799'],                                                                #and my axe!
     ['sand', 'https://tenor.com/view/anakin-star-wars-padme-gif-5048790'],                                                      #I hate sand
     [['potato', 'tater'], 'https://tenor.com/view/potato-po-tay-toes-lord-of-the-rings-lotr-samwise-gamgee-gif-5379028'],       #po-tay-toes
-    ['mine', 'https://cdn.discordapp.com/attachments/901521305931747348/934898165709152366/resized-image-Promo.jpeg'],          #they call it a mine!   #TODO: GIF
+    ['mein', 'https://cdn.discordapp.com/attachments/1042840873714593843/1047532238562136084/ein_mein.gif'],                    #they call it a mein!
+    ['mine', 'https://cdn.discordapp.com/attachments/1042840873714593843/1047532220044283954/a_mine.gif'],                      #they call it a mine!
     [['lift', 'elevator'], 'https://tenor.com/view/see-it-like-final-hamster-scared-gif-14498643'],                             #scared hamster
     ['frontflip', 'https://cdn.discordapp.com/attachments/895064046020202498/922284196871942164/ezgif-5-d8195ff3b7.gif'],       #backflip
     ['flip', 'https://tenor.com/view/trex-backflip-gif-11354213'],                                                              #flip
@@ -101,6 +113,11 @@ async def on_message(context):
     user = context.guild.get_member(getTagFromMessage(message))
     if (user != None):
 
+        #presence waitlist
+        if (user.status.name == 'offline' or user.status.name == 'idle'):
+            waiting.append(ThisNeedsAName(user.id, context.guild.id, context.channel))
+
+        #tag game
         if (user.id == client.user.id): #if self is tagged
             if (random.randint(0, 100) < 40): #40%
                 shouldRespond = True
@@ -213,6 +230,21 @@ async def on_message(context):
 async def on_reaction_add(reaction, user):
     if (user == client.user): #ignore self
         return
+
+# PRESENCE
+@client.event
+async def on_member_update(before, after):
+
+    if (after.status.name == 'online' or after.status.name == 'dnd'):
+
+        for event in waiting:
+            if (event.user == after.id and event.guild == after.guild.id):
+
+                if (datetime.now() - event.time < timedelta(minutes=1)):
+                    await event.channel.send('https://thumbs.gfycat.com/BogusAppropriateBird-size_restricted.gif')
+
+                waiting.remove(event)
+                break
 
 # COMMANDS
 #enforce command restrictions
@@ -420,6 +452,7 @@ async def steam(context, arg=None):
         username = steamAPI.isValidUser(arg)
         if (not username):
             await botsChannel.send(f'`{arg}` is not a valid Steam ID')
+            return
 
         #store id in steamIDs.txt
         lines = []
@@ -505,7 +538,8 @@ def getTagFromMessage(message):
         try:
             temp = int(temp)
         except:
-            pass
+            return None
+
         return temp
     return None
 
