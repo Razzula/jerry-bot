@@ -82,6 +82,7 @@ responses = [
     ['mine', 'https://cdn.discordapp.com/attachments/1042840873714593843/1047532220044283954/a_mine.gif'],                      #they call it a mine!
     [['lift', 'elevator'], 'https://tenor.com/view/see-it-like-final-hamster-scared-gif-14498643'],                             #scared hamster
     ['frontflip', 'https://cdn.discordapp.com/attachments/895064046020202498/922284196871942164/ezgif-5-d8195ff3b7.gif'],       #backflip
+    [['bonk bat', 'bonketh bat'], 'https://tenor.com/view/stay-down-warning-iron-man-final-warning-gif-13869294'],              #stay down. final warning
     ['flip', 'https://tenor.com/view/trex-backflip-gif-11354213'],                                                              #flip
     ['wrex', 'https://media0.giphy.com/media/ep3PeQAZGYG4TjHuNe/giphy.gif?cid=82a1493b3p187xacdh2ecmdzpxi65irtxz1xvtau8we3vz2z&rid=giphy.gif'] #"SHEPARD"
 ]
@@ -344,16 +345,17 @@ async def bonk(context, arg=None):
             return
             
         if (bonkRole == None): #bonk role does not exist
-            #TODO: create role if (able
+            #TODO: create role if able
             print("Role 'Bonk Jail' does not exist")
-            await context.channel.send('<:bonk:798539206901235773>')
+            await context.channel.send(random.choice(['<:bonk:798539206901235773>', 'https://tenor.com/view/ultimate-bonk-bonk-doggo-gif-26224096', 'https://tenor.com/view/guillotine-bonk-revolution-gif-20305805', 'https://tenor.com/view/bonk-gif-19410756']))
         elif (bonkRole in user.roles): #already bonked (unbonk)
             await user.remove_roles(bonkRole)
             await context.channel.send("https://tenor.com/view/gandalf-theoden-king-meduseld-two-towers-gif-22261302") #I release you
+            return
         else:
             await user.add_roles(bonkRole)
             #original channel
-            await context.channel.send('<:bonk:798539206901235773>')
+            await context.channel.send(random.choice(['<:bonk:798539206901235773>', 'https://tenor.com/view/ultimate-bonk-bonk-doggo-gif-26224096', 'https://tenor.com/view/guillotine-bonk-revolution-gif-20305805', 'https://tenor.com/view/bonk-gif-19410756']))
             if (random.randint(0, 5) <= 2):
                 await context.channel.send('https://www.youtube.com/watch?v=2D7P1khV40U')
             
