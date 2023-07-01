@@ -19,6 +19,7 @@ class ThisNeedsAName:
 intents = discord.Intents.default()
 intents.members = True
 intents.presences = True
+intents.message_content = True
 client = commands.Bot(intents=intents, command_prefix='!', help_command=None, case_insensitive=True)
 
 botsChannel = None
@@ -43,7 +44,7 @@ async def on_ready():
             await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=random.choice(christmasSongs)))
 
     elif ((today.month == 5) and (today.day == 4)): #MAY THE 4TH
-        await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="Baba Yetu"))
+        await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="Duel of the Fates"))
         
     else:
         with open('pfp/jerry.png', 'rb') as image:
@@ -94,6 +95,8 @@ reactions = [
     [['australia', 'didgeridumdum'], '🇦🇺'],
     [['new zealand', 'kiwi'], '🇳🇿'],
     [['malta', 'maltesers'], '🇲🇹'],
+    [['gmt', 'bst'], '🇬🇧'],
+    [['cet', 'cest'], '🇨🇭'],
     #jerry
     ['doubt', '<:doubt:922292403627491378>'],
     ['jerry', '❤️'],
@@ -163,11 +166,12 @@ async def on_message(context):
             await summon(context, '@everyone')
         else:
             id = getTagFromMessage(message)
-            await summon(context, f'<@{id}>')
+            if (id != None):
+                await summon(context, f'<@{id}>')
 
     ##DANCE
     if ('dance' in message):
-        danceMoves = ['https://cdn.discordapp.com/attachments/901521305931747348/922290586487246888/ezgif-5-be2c8bfa47.gif', 'https://c.tenor.com/b2Fo3D-oA20AAAAC/dinosaur-pole-dance.gif', 'https://tenor.com/view/monty-python-and-the-holy-grail-dance-celebrate-gif-12275693', 'https://tenor.com/view/monty-python-camelot-dance-monty-python-dance-camelot-medieval-gif-17123270', 'https://tenor.com/view/katy-bentz-spin-spinny-dinosaur-gif-23363009', 'https://tenor.com/view/smeagle-gollum-gif-8750815', 'https://tenor.com/view/simba-lion-king-funny-disney-gif-5763716', 'https://tenor.com/view/skyrim-dragon-dance-elder-scrolls-gif-6076592', 'https://media.tenor.com/VNcLWS_jDR8AAAAC/bluey-dance.gif']
+        danceMoves = ['https://cdn.discordapp.com/attachments/901521305931747348/922290586487246888/ezgif-5-be2c8bfa47.gif', 'https://c.tenor.com/b2Fo3D-oA20AAAAC/dinosaur-pole-dance.gif', 'https://tenor.com/view/monty-python-and-the-holy-grail-dance-celebrate-gif-12275693', 'https://tenor.com/view/monty-python-camelot-dance-monty-python-dance-camelot-medieval-gif-17123270', 'https://tenor.com/view/katy-bentz-spin-spinny-dinosaur-gif-23363009', 'https://tenor.com/view/smeagle-gollum-gif-8750815', 'https://tenor.com/view/simba-lion-king-funny-disney-gif-5763716', 'https://tenor.com/view/skyrim-dragon-dance-elder-scrolls-gif-6076592', 'https://media.tenor.com/VNcLWS_jDR8AAAAC/bluey-dance.gif', 'https://tenor.com/view/yahia-potato-dance-gif-16070760']
         await context.channel.send(random.choice(danceMoves))
         return
 
