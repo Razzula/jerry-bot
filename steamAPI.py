@@ -1,29 +1,32 @@
-import os, random
+import os
+import random
 import requests
 from dotenv import load_dotenv
 
 load_dotenv('token.env')
 key = os.environ.get('STEAM_API_KEY')
 
+
 def GET(endpoint):
     response = requests.get(endpoint)
     if not response:
         print('Error: ' + str(response.status_code))
 
-    if (response.status_code == 429): #too many requests
+    if (response.status_code == 429): # too many requests
         raise Exception("429")
 
     return response
 
-def getSharedLibrary(users):
-    #GET LIST OF SHARED GAMES AMONG USERS
 
-    games = [ None ]
+def getSharedLibrary(users):
+    # GET LIST OF SHARED GAMES AMONG USERS
+
+    games = [None]
     for user in users:
-        #GET
-        ##Profile Status
+        #  GET
+        ## Profile Status
         response = GET('https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key='+key+'&steamids='+user+'&format=json')
-        if (response.status_code == 404): #not found
+        if (response.status_code == 404): # not found
             continue
 
         result = response.json()
@@ -35,15 +38,15 @@ def getSharedLibrary(users):
             print(result['response']['players'][0]['personaname'] + 'is not public')
             continue
 
-        ##Games
+        ## Games
         response = GET('https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key='+key+'&steamid='+user+'&format=json')
-        if (response.status_code == 404): #not found
+        if (response.status_code == 404): # not found
             continue
 
         result = response.json()
 
         temp = []
-        if (games == [ None ]): #first sweep
+        if (games == [None]): # first sweep
             for game in result['response']['games']:
                 temp.append(game['appid'])
 
@@ -53,21 +56,22 @@ def getSharedLibrary(users):
                     temp.append(game['appid'])
             if (games == []):
                 break
-        
+
         games = temp.copy()
-    
+
     return games
 
+
 def getGame(games, multiplayer):
-    #SELECT GAME FROM LIST
+    # SELECT GAME FROM LIST
 
     while (True):
         id = random.choice(games)
         print(id)
 
-        ##App Data
+        ## App Data
         response = GET('https://store.steampowered.com/api/appdetails?appids='+str(id))
-        if (response.status_code == 404): #not found
+        if (response.status_code == 404): # not found
             continue
 
         result = response.json()
@@ -79,22 +83,23 @@ def getGame(games, multiplayer):
             print('Error')
             return None
 
-        #ensure game is multiplayer
+        # ensure game is multiplayer
         for category in result[str(id)]['data']['categories']:
             if (category['description'].lower() == 'multi-player'):
                 multiplayer = False
                 break
-        
-        if (not multiplayer): #requirements is solo, or multi has been found
+
+        if (not multiplayer): # requirements is solo, or multi has been found
             break
 
         games.remove(id)
-        if (games == []): #no shared multiplayer games
+        if (games == []): # no shared multiplayer games
             print('null')
             return None
 
     print(result[str(id)]['data']['name'])
     return result[str(id)]['data']['name']
+
 
 def isValidUser(id):
     response = GET('https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key='+key+'&steamids='+id+'&format=json')
