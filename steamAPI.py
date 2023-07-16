@@ -97,8 +97,8 @@ def getGame(games, multiplayer):
             print('null')
             return None
 
-    print(result[str(id)]['data']['name'])
-    return result[str(id)]['data']['name']
+    # print(result[str(id)]['data'])
+    return result[str(id)]['data']
 
 
 def isValidUser(id):

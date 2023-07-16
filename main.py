@@ -14,10 +14,11 @@ load_dotenv('token.env')
 
 
 class ThisNeedsAName:
-    def __init__(self, user, guild, channel) -> None:
+    def __init__(self, user, guild, channel, message) -> None:
         self.user = user
         self.guild = guild
         self.channel = channel
+        self.message = message
         self.time = datetime.now()
 
 
@@ -34,6 +35,8 @@ botsChannel = None
 deciCache = [None, None]
 
 waiting = []
+
+decisionEmbed = None
 
 # MESSAGES
 responses = [
@@ -123,7 +126,7 @@ async def on_message(context):
 
         # presence waitlist
         if (user.status.name in ('offline', 'idle')):
-            waiting.append(ThisNeedsAName(user.id, context.guild.id, context.channel))
+            waiting.append(ThisNeedsAName(user.id, context.guild.id, context.channel, context.id))
 
         # tag game
         if (user.id == client.user.id):  # if self is tagged
@@ -240,9 +243,26 @@ async def on_message(context):
 
 # REACTIONS
 @client.listen()
-async def on_reaction_add(_, user):
-    if ((not awake) or (user == client.user)):  # awake only / ignore self
+async def on_reaction_add(reaction, user):
+    if ((not awake) or (user.id == client.user.id)):  # awake only / ignore self
         return
+    
+    if (decisionEmbed is not None):
+        voteCount = discord.utils.get(reaction.message.reactions, emoji=reaction.emoji).count - 1
+        if ((reaction.message.id == decisionEmbed[0].id) and (voteCount >= decisionEmbed[1] * 0.5)):
+            
+            # refresh embed with new game
+            try:
+                embed = getGame(deciCache[1], multiplayer=(decisionEmbed[1] > 1))
+
+                # output result
+                await decisionEmbed[0].clear_reactions()
+                await decisionEmbed[0].edit(embed=embed)
+                await decisionEmbed[0].add_reaction('🔄')
+
+            except Exception as e:
+                await reaction.message.channel.send("uh oh, I broke")
+                print(e)
 
 
 # PRESENCE
@@ -252,10 +272,14 @@ async def on_presence_update(_, after):
     if (after.status.name in ('online', 'dnd')):
 
         for event in waiting:
-            if (event.user == after.id and event.guild == after.guild.id):
+            if ((event.user == after.id) and (event.guild == after.guild.id)):
 
                 if (datetime.now() - event.time < timedelta(minutes=1)):
-                    await event.channel.send('https://thumbs.gfycat.com/BogusAppropriateBird-size_restricted.gif')
+                    original = await event.channel.fetch_message(event.message)
+                    if (original is not None):
+                        await original.reply('https://thumbs.gfycat.com/BogusAppropriateBird-size_restricted.gif')
+                    else:
+                        await event.channel.send('https://thumbs.gfycat.com/BogusAppropriateBird-size_restricted.gif')
 
                 waiting.remove(event)
                 break
@@ -429,6 +453,7 @@ async def bonk_error(error, context):
 ## DECIDE
 @client.command(pass_context=True)
 async def decide(context):
+    global decisionEmbed
 
     # get users in vc
     activeUsers = []
@@ -472,17 +497,23 @@ async def decide(context):
         await context.channel.send("You don't have any games in common.")
     else:
         try:
-            game = steamAPI.getGame(games, multiplayer=(len(users) > 1))  # game must be multi-player if multiple users
+            embed = getGame(games, multiplayer=(len(users) > 1))
 
             # passive aggressive
-            boatBois = ["Don't Starve Together", "The Elder Scrolls Online", "Barotrauma"]
-            if (('524255350182903838' not in users) and (game in boatBois)):
-                game += r' \*cough* <@!524255350182903838> \*cough*'
+            # boatBois = ["Don't Starve Together", "The Elder Scrolls Online", "Barotrauma"]
+            # if (('524255350182903838' not in users) and (game in boatBois)):
+            #     game += r' \*cough* <@!524255350182903838> \*cough*'
 
             # output result
-            await context.channel.send(game)
-        except:
+            if (decisionEmbed is not None):
+                await decisionEmbed[0].clear_reactions()
+
+            decisionEmbed = (await context.channel.send(embed=embed), len(users))
+            await decisionEmbed[0].add_reaction('🔄')
+
+        except Exception as e:
             await context.channel.send("uh oh, I broke")
+            print(e)
 
 
 ## REMIND
@@ -666,6 +697,22 @@ def getActivity():
             avatar = image.read()
 
     return name, avatar
+
+
+def getGame(gamesList, multiplayer):
+    game = steamAPI.getGame(gamesList, multiplayer=multiplayer)  # game must be multi-player if multiple users
+
+    # generate embed
+    embed = discord.Embed(title=game['name'], color=discord.Color.dark_blue() , description=game['short_description'])
+    embed.url = f'https://store.steampowered.com/app/{game["steam_appid"]}'
+    embed.set_thumbnail(url=game['header_image'])
+
+    if (multiplayer):
+        embed.add_field(name="Multiplayer ✅", value='')
+        embed.add_field(name="Cooperative ❓", value='')
+    embed.add_field(name="Controller Support ❓", value='')
+
+    return embed
 
 
 # MAIN ---
