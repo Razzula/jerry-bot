@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 import steamAPI
 import asyncio
 import re
+import json
 
 load_dotenv('token.env')
 
@@ -34,7 +35,8 @@ awake = False
 botsChannel = None
 deciCache = [None, None]
 
-waiting = []
+presenceQueue = []
+reminderQueue = []
 
 decisionEmbed = None
 
@@ -89,19 +91,55 @@ reactions = [
     ['beans', '<:beans:796047923711836210>'],
 ]
 
+perspectiveConvertor = {
+    # first -> second
+    'my': 'your',
+    'me': 'you',
+    'i': 'you',
+    'mine': 'yours',
+    'am': 'are',
+    "i'm": "you're",
+    "i'll": "you'll",
+    # second -> third
+    'your': 'their',
+    'you': 'they',
+    'yours': 'theirs',
+    "you're": "they're",
+    "you'll": "they'll"
+}
+
 @client.listen()
 async def on_ready():
 
     global awake
+    global reminderQueue
 
     print(f'Logged in as {client.user}\n')
     await client.change_presence(status=discord.Status.invisible)
 
+    # profile
     name, avatar = getActivity()
     try:
         await client.user.edit(avatar=avatar)
     except discord.errors.HTTPException:
         print('Avatar not changed: HTTPException')
+
+    # reminders
+    try:
+        with open('reminders.json', 'r') as file:
+            reminderQueue = json.load(file)
+    except FileNotFoundError:
+        print('No reminders found.')
+    except json.decoder.JSONDecodeError:
+        print('No reminders found.')
+    for reminder in reminderQueue:
+        reminderTime = (float)(reminder['time'])
+        if (reminderTime >= time.time()):
+            asyncio.create_task(setReminder(reminder))
+        else:
+            reminderQueue.remove(reminder)
+    with open('reminders.json', 'w') as file:
+        json.dump(reminderQueue, file, indent=4)
 
     awake = True
 
@@ -126,7 +164,7 @@ async def on_message(context):
 
         # presence waitlist
         if (user.status.name in ('offline', 'idle')):
-            waiting.append(ThisNeedsAName(user.id, context.guild.id, context.channel, context.id))
+            presenceQueue.append(ThisNeedsAName(user.id, context.guild.id, context.channel, context.id))
 
         # tag game
         if (user.id == client.user.id):  # if self is tagged
@@ -271,7 +309,7 @@ async def on_presence_update(_, after):
 
     if (after.status.name in ('online', 'dnd')):
 
-        for event in waiting:
+        for event in presenceQueue:
             if ((event.user == after.id) and (event.guild == after.guild.id)):
 
                 if (datetime.now() - event.time < timedelta(minutes=1)):
@@ -281,7 +319,7 @@ async def on_presence_update(_, after):
                     else:
                         await event.channel.send('https://thumbs.gfycat.com/BogusAppropriateBird-size_restricted.gif')
 
-                waiting.remove(event)
+                presenceQueue.remove(event)
                 break
 
 
@@ -524,8 +562,29 @@ async def remind(context, arg=None):
     
     delay = 0
 
+    # get message
+    message = re.search(r'remind (me|.*?) .*?(?:to|that|about) (.*)', context.content)
+    if (message is not None):
+        target = message.group(1)
+        temp = message.group(2).split(' ')
+
+        if (target == 'me'):
+            target = context.author.mention
+
+        message = f'{target}, '
+        for word in temp:
+            newWord = perspectiveConvertor.get(word.lower())
+            if (newWord is not None):
+                message += newWord + ' '
+                continue
+            message += word + ' '
+
+    else:
+        message = context.content
+
+    # calculate delay
     for unit in [('hour', 3600), ('min', 60), ('sec', 1)]:
-        temp = re.search(f'(\d+|an?) {unit[0]}', context.content)
+        temp = re.search(fr'(\d+|an?) {unit[0]}', context.content)
 
         if (temp is not None):
             temp = temp.group(1)
@@ -535,10 +594,21 @@ async def remind(context, arg=None):
             else:
                 delay += int(temp) * unit[1]
 
-    if (delay > 0):
-        await asyncio.sleep(delay) #TODO: store to be resumable
+    timeToRemind = time.time() + delay
 
-    await context.reply(f'<@{context.author.id}>')
+    #store to be resumable
+    reminderQueue.append({
+        'contents': message,
+        'time': (str)(timeToRemind),
+        'channel': context.channel.id,
+        'message': context.id,
+        'author': context.author.id
+    })
+
+    with open('reminders.json', 'w') as file:
+        json.dump(reminderQueue, file, indent=4)
+        
+    await setReminder(reminderQueue[-1])
 
 
 ## STEAM
@@ -713,6 +783,32 @@ def getGame(gamesList, multiplayer):
     embed.add_field(name="Controller Support ❓", value='')
 
     return embed
+
+
+async def setReminder(reminder):
+
+    delay = (float)(reminder['time']) - time.time()
+
+    # wait #TODO; move to separate thread
+    if (delay > 0):
+        print(f'Message scheduled for {(int)(delay)}s')
+        await asyncio.sleep(delay)
+
+    channel = client.get_partial_messageable(reminder['channel'])
+    context = channel.get_partial_message(reminder['message'])
+
+    message = reminder['contents']
+    #TODO; handle if message has been deleted
+
+    if (context is not None):
+        await context.reply(message)
+    else:
+        await channel.send(message)
+
+    # update queue
+    reminderQueue.remove(reminder)
+    with open('reminders.json', 'w') as file:
+        json.dump(reminderQueue, file, indent=4)
 
 
 # MAIN ---
