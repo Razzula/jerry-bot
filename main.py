@@ -314,6 +314,23 @@ async def on_message(context):
         if (prompt in message):
           await context.channel.send(response[1])
           return
+        
+  # REGURGITATE GITHUB WEBHOOKS
+  if (context.author.id == 1132259152304029696):
+    embed = context.embeds[0]
+
+    if ((':main' in embed.title) or (':master' in embed.title)):
+      repoName = embed.title.split(':')[0] + ']'
+      embed.title = f'{repoName} has updated!'
+      embed.color = discord.Color.green()
+
+      try:
+        channel = discord.utils.get(context.guild.channels, name="general")
+      except:
+        channel = context.channel
+
+      await channel.send('@everyone', embed=embed)
+      return
 
 
 # REACTIONS
@@ -326,7 +343,7 @@ async def on_reaction_add(reaction, user):
     voteCount = discord.utils.get(reaction.message.reactions,
                                   emoji=reaction.emoji).count - 1
     if ((reaction.message.id == decisionEmbed[0].id)
-        and (voteCount >= decisionEmbed[1] * 0.5)):
+        and (voteCount > decisionEmbed[1] * 0.5)):
 
       # refresh embed with new game
       try:
@@ -637,7 +654,7 @@ async def remind(context, arg=None):
     if (target in ['me', None]):
       target = context.author.mention
 
-    message = re.search(r'remind (me|.*?) .*?(?:to|that|about) (.*)', content)
+    message = re.search(r'remind (me|.*?) .*?(?:to|that|about|of) (.*)', content)
     if (message is not None):
       temp = message.group(2).split(' ')
 
