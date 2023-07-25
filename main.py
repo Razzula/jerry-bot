@@ -153,7 +153,7 @@ async def on_ready():
 
   awake = True
 
-  print(f'Ready.\n')
+  print('Ready.\n')
   await client.change_presence(
     activity=discord.Activity(type=discord.ActivityType.listening, name=name))
 
@@ -225,6 +225,9 @@ async def on_message(context):
   if ('jerry' in message):
     ## BONK
     if ('bonk' in message):
+      if (not context.author.guild_permissions.administrator):
+        await context.channel.send('https://tenor.com/view/lotr-lord-of-the-rings-theoden-king-of-rohan-you-have-no-power-here-gif-4952489')
+        return
       id = getTagFromMessage(message)
       await bonk(context, f'<@{id}>')
       return
@@ -314,7 +317,7 @@ async def on_message(context):
         if (prompt in message):
           await context.channel.send(response[1])
           return
-        
+
   # REGURGITATE GITHUB WEBHOOKS
   if (context.author.id == 1132259152304029696):
     embed = context.embeds[0]
@@ -772,12 +775,13 @@ async def summon(context, target=None, timeToRemind=0, subtle=True):
     })
     with open('reminders.json', 'w') as file:
       json.dump(reminderQueue, file, indent=4)
-  
+
     asyncio.create_task(setReminder(reminderQueue[-1]))
     await context.add_reaction('👍🏿')
-    
+
   else:
     await context.message.add_reaction('❓')
+
 
 ## SLEEP
 @client.command(pass_context=True)
@@ -924,7 +928,7 @@ async def setReminder(reminder):
       await context.reply(message[0])
     except discord.errors.HTTPException:  # handle if message has been deleted
       await channel.send(message[0])
-      
+
     for item in message[1:]:
       await channel.send(item)
 
