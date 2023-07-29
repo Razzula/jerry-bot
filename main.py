@@ -74,7 +74,7 @@ responses = [
   [['potato', 'tater'], 'https://tenor.com/view/potato-po-tay-toes-lord-of-the-rings-lotr-samwise-gamgee-gif-5379028'],  # po-tay-toes
   ['mein', 'https://cdn.discordapp.com/attachments/1042840873714593843/1047532238562136084/ein_mein.gif'],  # they call it a mein!
   ['mine', 'https://cdn.discordapp.com/attachments/1042840873714593843/1047532220044283954/a_mine.gif'],  # they call it a mine!
-  [['lift', 'elevator'], 'https://tenor.com/view/see-it-like-final-hamster-scared-gif-14498643'],  # scared hamster
+  [['lift', 'elevator'], 'https://cdn.discordapp.com/attachments/1121914639811346553/1134813866820386826/MOSHED-2023-7-29-13-44-6.gif'],  # scared hamster
   ['frontflip', 'https://cdn.discordapp.com/attachments/895064046020202498/922284196871942164/ezgif-5-d8195ff3b7.gif'],  # backflip
   [['bonk bat', 'bonketh bat'], 'https://tenor.com/view/stay-down-warning-iron-man-final-warning-gif-13869294'],  # stay down. final warning
   ['flip', 'https://tenor.com/view/trex-backflip-gif-11354213'],  # flip

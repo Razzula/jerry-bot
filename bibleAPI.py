@@ -157,6 +157,9 @@ def getBibleReferences(text):
                                 # VERSE NUMBERS
                                 if ("versenum" in child["class"]):
                                     text = f'**{child.get_text()}**'
+                                # CHAPTER NUMBERS
+                                elif ("chapternum" in child["class"]):
+                                    text = f'**{1}**'
                                 # HEADINGS
                                 elif ("heading" in child["class"]):
                                     text = f'__**{child.get_text()}**__'
