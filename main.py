@@ -7,6 +7,7 @@ from discord.ext.commands import has_permissions, MissingPermissions
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import steamAPI
+import bibleAPI
 import asyncio
 import re
 import json
@@ -117,7 +118,6 @@ perspectiveConvertor = {
   "you'll": "they'll"
 }
 
-
 @client.listen()
 async def on_ready():
 
@@ -218,6 +218,14 @@ async def on_message(context):
           await context.channel.send(f'<@{user.id}>')
         await user.add_roles(tagRole)
 
+  # BIBLE REFERENCES
+  references = bibleAPI.getBibleReferences(message)
+  if (references != None):
+    for reference in references:
+      await context.channel.send(f"> {reference[1]}\n{reference[0]}")
+    return
+
+  # REMINDERS
   if ('remind' in message):
     await remind(context)
     return
