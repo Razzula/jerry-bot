@@ -1,7 +1,8 @@
 # LOTR ---------------------
 A wizard is never late, {}. Nor is he early. He arrives precisely when he means to.
 So do all who live to see such times. But that is not for them to decide. All we have to decide is what to do with the time that is given us.
-Havo dad, Legolas.
+Have a dad, {}.
+Have a dad, Legolas.
 If there is a key, there must be a door.
 They're taking the hobbits to Isengard.
 If more people valued home over gold: this world would be a merrier place.
@@ -62,14 +63,14 @@ The more you take, the less you have.
 Before the battle of the fist, comes the battle of the mind.
 I’m not a big fat panda. I’m _the_ big fat panda.
 
-#WITCHER -------------------
+# WITCHER -------------------
 Evil is evil, {}. Lesser, greater, middling, it's all the same. Proportions are negotiated, boundaries blurred. I'm not a pious hermit, I haven't done only good in my life. But if I'm to choose between one evil and another, then I prefer not to choose at all.
 As in life, it is impossible always to be fully prepared for battle. Keep your sword close, and keep moving.
 In the face of the inevitable, {}, good leaders should always choose mercy.
 For all it brightens, love casts long shadows.
 Fear is an illness. If you catch it and you leave it untreated, it can consume you.
 
-#WILDERMYTH ----------------
+# WILDERMYTH ----------------
 As the old will tell you: precious things go overlooked in a ruin. What lodges amid the bones of failure is often the dream that drove it.
 Day drops, day rises. Dusk is sweet, the sunrise sweeter.
 
@@ -77,7 +78,10 @@ Day drops, day rises. Dusk is sweet, the sunrise sweeter.
 When in doubt. Save.
 No one is inherently good or evil. Only our intentions are.
 
-#JOSH ----------------------
+# BALDUR'S GATE -------------
+Genital visibility doesn't affect your adventure or access to romance options.
+
+# JOSH ----------------------
 The moon is just a rock. But the earth is a complex rock.
 A number is always something.
 If somebody just died of racism, don't make racist jokes.
