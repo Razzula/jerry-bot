@@ -4,13 +4,18 @@ import urllib.parse
 import requests
 from bs4 import BeautifulSoup, Tag
 
-with open('usfms.json', 'r') as file:
-  usfmManifest = json.load(file)
+
+try:
+    with open('usfms.json', 'r') as file:
+        usfmManifest = json.load(file)
+except:
+    print("Error loading USFM manifest")
+    usfmManifest = []
 
 
 def getUSFMsFromString(reference: str, current_book = None, current_chapter = None):
     
-    match = re.search(r'(I+ |[123]+)? ?([A-Za-z]+)\.? *(\d+)(?::\s*(\d+)(?:\s*-\s*(\d+))?|-(\d+))?(?:.*?([;,].*))?', reference.upper())
+    match = re.search(r'(I+|[123]+)?\s*([A-Za-z]+)\.? *(\d+)(?::\s*(\d+)(?:\s*-\s*(\d+))?|-(\d+))?(?:.*?([;,].*))?', reference.upper())
     """
     1: book number (optional)               III     
     2: book name                            John    Genesis
@@ -47,7 +52,7 @@ def getUSFMsFromString(reference: str, current_book = None, current_chapter = No
                 else:
                     # account for Roman numerals
                     if (match.group(1).startswith('I')):
-                        match_group_1 = str(len(match.group(1)) - 1)
+                        match_group_1 = str(len(match.group(1)))
                     else:
                         match_group_1 = match.group(1)
                 
@@ -85,9 +90,10 @@ def getUSFMsFromString(reference: str, current_book = None, current_chapter = No
 def extractReferences(text, currentBook=None, currentChapter=None):
     if text == '':
         return []
+    text = text.upper()
 
     # detect references
-    pattern = re.compile(r"(?:(?:I+ |[123]+ ?)?(?:[A-Za-z]+)\.? *|(?<=[;,])) ?\d+(?::\s*\d+(?:\s*-\s*\d+)?|-\d+)?")
+    pattern = re.compile(r"(?:(?:(?:I+|[123]+?)?\s*)(?:[A-Za-z]+)\.? *|(?<=[;,])) ?\d+(?::\s*\d+(?:\s*-\s*\d+)?|-\d+)?")
     matches = re.findall(pattern, text)
 
     if (not matches):
@@ -119,15 +125,22 @@ def extractReferences(text, currentBook=None, currentChapter=None):
 
 def getBibleReferences(text):
 
+    text = text.upper()
+
     references = extractReferences(text)
     if (references == []):
         return None
+    
+    encoodedVersion = urllib.parse.quote('NKJV')
+    for translation in ['NKJV','KJV', 'ESV', 'NIV', 'NLT']:
+        if (translation in text):
+            encoodedVersion = urllib.parse.quote(translation)
+            continue
     
     results = []
     for reference in references:
 
         encodedQuery = urllib.parse.quote(reference)
-        encoodedVersion = urllib.parse.quote("NKJV")
 
         url = f'https://www.biblegateway.com/passage?search={encodedQuery}&version={encoodedVersion}'
 
@@ -175,14 +188,19 @@ def getBibleReferences(text):
 
                 # further formatting
                 content = " ".join(content)
+                content = re.sub(r'(\(|\[)[a-zA-Z]+(\)|\])', '', content) # exclude footnotes
                 content = re.sub(r'\s\s+', ' ', content) # remove extra spaces
-                content = re.sub(r'\([a-zA-Z]\)', '', content) # exclude footnotes
-                content = re.sub(r'\[[a-zA-Z]\]', '', content) # exclude footnotes
 
-                if (len(content) >= 1950):
-                    content = content[:1950] + "**...**"
+                contents = []
+                while (len(content) >= 1950):
+                    i = 1950
+                    while (content[i] != ' '):
+                        i -= 1
+                    contents.append(content[:i+1])
+                    content = content[i+1:]
+                contents.append(content)
 
-                results.append([verse, content])
+                results.append([f'**{verse}** ({encoodedVersion})', contents])
 
             else:
                 print(f"Request failed with status code: {response.status_code} - {response.reason}")

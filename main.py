@@ -46,7 +46,7 @@ reminderQueue = []
 decisionEmbed = None
 
 # MESSAGES
-responses = [
+responses = [ # TODO store these GIFs and don't rely upon links
   ['where did you ', 'https://cdn.discordapp.com/attachments/1042840873714593843/1046228124284747928/Man_of_Steel_1080p_I_was_bred_to_be_a_warrior_Kal_Trained_my.gif'],  # zod
   ['ride', 'https://cdn.discordapp.com/attachments/901521305931747348/1046164201867051018/ride_now_ride_for_ruin_and_the_worlds_ending.gif'],  # did you say ride?
   ['lotr bad', 'https://media.tenor.com/qRXLEt2PRDYAAAAC/gandalf-keep.gif'],  # forked tongue
@@ -76,6 +76,7 @@ responses = [
   ['mine', 'https://cdn.discordapp.com/attachments/1042840873714593843/1047532220044283954/a_mine.gif'],  # they call it a mine!
   [['lift', 'elevator'], 'https://cdn.discordapp.com/attachments/1121914639811346553/1134813866820386826/MOSHED-2023-7-29-13-44-6.gif'],  # scared hamster
   ['frontflip', 'https://cdn.discordapp.com/attachments/895064046020202498/922284196871942164/ezgif-5-d8195ff3b7.gif'],  # backflip
+  [['sbonc', 'sponc'], 'https://media.tenor.com/LZqN6gPJULcAAAAC/playing-squash-faisal-khan.gif'], # squash
   [['bonk bat', 'bonketh bat'], 'https://tenor.com/view/stay-down-warning-iron-man-final-warning-gif-13869294'],  # stay down. final warning
   ['flip', 'https://tenor.com/view/trex-backflip-gif-11354213'],  # flip
   ['borg', 'https://64.media.tumblr.com/614e4e4c0a1fa60eda4dff4d23e37965/87b2129a522ab83f-30/s540x810/54ec3cf0689a9f35dfa721b3bf5a2363968bb76d.gif'],  # shadowfax
@@ -129,10 +130,11 @@ async def on_ready():
 
   # profile
   name, avatar = getActivity()
-  try:
-    await client.user.edit(avatar=avatar)
-  except discord.errors.HTTPException:
-    print('Avatar not changed: HTTPException')
+  if (not os.environ.get('DEBUG')):
+    try:
+      await client.user.edit(avatar=avatar)
+    except discord.errors.HTTPException:
+      print('Avatar not changed: HTTPException')
 
   # reminders
   try:
@@ -211,8 +213,7 @@ async def on_message(context):
 
           n = context.guild.member_count - 1
           while ((playerRole not in user.roles)
-                 or (user.id
-                     == client.user.id)):  # no tagging non-players, or self
+              or (user.id == client.user.id)):  # no tagging non-players, or self
             user = context.guild.members[random.randint(0, n)]
 
           await context.channel.send(f'<@{user.id}>')
@@ -222,7 +223,9 @@ async def on_message(context):
   references = bibleAPI.getBibleReferences(message)
   if (references != None):
     for reference in references:
-      await context.channel.send(f"> {reference[1]}\n{reference[0]}")
+      await context.channel.send(reference[0])
+      for chunk in reference[1]:
+        await context.channel.send(f'> {chunk}')
     return
 
   # REMINDERS
@@ -383,11 +386,11 @@ async def on_presence_update(_, after):
           original = await event.channel.fetch_message(event.message)
           if (original is not None):
             await original.reply(
-              'https://thumbs.gfycat.com/BogusAppropriateBird-size_restricted.gif'
+              'https://cdn.discordapp.com/attachments/901521305931747348/1174092089504583760/LOTR__The_Return_of_the_King_Pippin__sees_inside_the_Palanti.gif?ex=65665577&is=6553e077&hm=e96f9e7f58c187c8a112c58c462970dd1d2d6ceea0da4da5d767bdec707c872d&'
             )
           else:
             await event.channel.send(
-              'https://thumbs.gfycat.com/BogusAppropriateBird-size_restricted.gif'
+              'https://cdn.discordapp.com/attachments/901521305931747348/1174092089504583760/LOTR__The_Return_of_the_King_Pippin__sees_inside_the_Palanti.gif?ex=65665577&is=6553e077&hm=e96f9e7f58c187c8a112c58c462970dd1d2d6ceea0da4da5d767bdec707c872d&'
             )
 
         presenceQueue.remove(event)
