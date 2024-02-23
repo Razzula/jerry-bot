@@ -138,7 +138,7 @@ async def on_ready():
 
   # reminders
   try:
-    with open('reminders.json', 'r') as file:
+    with open('data/dynamic/reminders.json', 'r') as file:
       reminderQueue = json.load(file)
   except FileNotFoundError:
     print('No reminders found.')
@@ -150,7 +150,7 @@ async def on_ready():
       asyncio.create_task(setReminder(reminder))
     else:
       reminderQueue.remove(reminder)
-  with open('reminders.json', 'w') as file:
+  with open('data/dynamic/reminders.json', 'w') as file:
     json.dump(reminderQueue, file, indent=4)
 
   awake = True
@@ -300,7 +300,7 @@ async def on_message(context):
   # WORDS OF WISDOM
   if (('jerry' in message) and ('wis' in message)):
     try:
-      with open('fortune.txt', 'r') as file:
+      with open('data/static/fortune.txt', 'r') as file:
         options = []
         for line in file:
           line = line.rstrip() + ' '
@@ -600,7 +600,7 @@ async def decide(context):
     activeUsers.append(str(user.id))
 
   # get steam ids from list
-  with open('steamIDs.txt', 'r') as file:
+  with open('data/dynamic/steamIDs.txt', 'r') as file:
     users = []
     for line in file:
       data = line[0:36].split(':')
@@ -697,7 +697,7 @@ async def remind(context, arg=None):
     'message': context.id,
     'author': context.author.id
   })
-  with open('reminders.json', 'w') as file:
+  with open('data/dynamic/reminders.json', 'w') as file:
     json.dump(reminderQueue, file, indent=4)
 
   asyncio.create_task(setReminder(reminderQueue[-1]))
@@ -725,7 +725,7 @@ async def steam(context, arg=None):
     flag = False
 
     try:
-      with open('steamIDs.txt', 'r') as file:
+      with open('data/dynamic/steamIDs.txt', 'r') as file:
         for line in file:
           data = line.split(':')
           if (data[0] == user):
@@ -738,11 +738,11 @@ async def steam(context, arg=None):
       print("'steamIDs.txt' does not exist")
 
     if (flag):
-      with open('steamIDs.txt', 'w+') as file:
+      with open('data/dynamic/steamIDs.txt', 'w+') as file:
         for line in lines:
           file.write(line)
     else:
-      with open('steamIDs.txt', 'a') as file:
+      with open('data/dynamic/steamIDs.txt', 'a') as file:
         file.write('\n' + user + ':' + arg)
 
     await context.message.add_reaction('👍🏿')
@@ -784,7 +784,7 @@ async def summon(context, target=None, timeToRemind=0, subtle=True):
       'message': context.id,
       'author': context.author.id
     })
-    with open('reminders.json', 'w') as file:
+    with open('data/dynamic/reminders.json', 'w') as file:
       json.dump(reminderQueue, file, indent=4)
 
     asyncio.create_task(setReminder(reminderQueue[-1]))
@@ -860,7 +860,7 @@ def getActivity():
 
   today = datetime.now()
   if (today.month == 12):  # CHRISTMAS
-    with open('pfp/jerry-festag.png', 'rb') as image:
+    with open('data/static/pfp/jerry-festag.png', 'rb') as image:
       avatar = image.read()
 
     if (today.day <= 14):  # JINGLE JAM
@@ -877,7 +877,7 @@ def getActivity():
     name = "Duel of the Fates"
 
   else:
-    with open('pfp/jerry.png', 'rb') as image:
+    with open('data/static/pfp/jerry.png', 'rb') as image:
       avatar = image.read()
 
   return name, avatar
@@ -951,7 +951,7 @@ async def setReminder(reminder):
 
   # update queue
   reminderQueue.remove(reminder)
-  with open('reminders.json', 'w') as file:
+  with open('data/dynamic/reminders.json', 'w') as file:
     json.dump(reminderQueue, file, indent=4)
 
 

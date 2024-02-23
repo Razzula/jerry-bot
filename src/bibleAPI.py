@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup, Tag
 
 
 try:
-    with open('usfms.json', 'r') as file:
+    with open('data/static/usfms.json', 'r') as file:
         usfmManifest = json.load(file)
 except:
     print("Error loading USFM manifest")
