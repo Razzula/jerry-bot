@@ -61,9 +61,6 @@ class JerryBot(commands.Bot):
         with open(os.path.join(STATIC_DATA_PATH, 'gifs.json'), 'r', encoding='utf-8') as file:
             self.GIFS = json.load(file)
 
-        with open(os.path.join(STATIC_DATA_PATH, 'emotes.json'), 'r', encoding='utf-8') as file:
-            self.EMOTES = json.load(file)
-
         intents = discord.Intents.default()
         intents.members = True
         intents.presences = True
@@ -140,7 +137,7 @@ class JerryBot(commands.Bot):
 
             for prompt in response[0]:
                 if (prompt in message):
-                    await context.channel.send(f'https://github.com/Razzula/jerry-bot/blob/v2.0/data/static/gifs/{response[1]}.gif') # TODO: switch to master branch
+                    await context.channel.send(f'https://raw.githubusercontent.com/Razzula/jerry-bot/v2.0/data/static/gifs/{response[1]}.gif') # TODO: switch to master branch
                     return
 
         # REGURGITATE GITHUB WEBHOOKS
