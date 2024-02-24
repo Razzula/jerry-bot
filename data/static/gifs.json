@@ -1,0 +1,162 @@
+{
+    "responses": [
+        [
+            "where did you ",
+            "OnAFarm"
+        ],
+        [
+            "ride",
+            "DidYouSayRide"
+        ],
+        [
+            "lotr bad",
+            "KeepYourForkedTongue"
+        ],
+        [
+            ["circadian", "sympathetic nerve", "rem ", "read a book"],
+            "GandalfReading"
+        ],
+        [
+            "deforestation",
+            "Treebeard"
+        ],
+        [
+            "what'd you tell me",
+            "You wanna win and walk away?"
+        ],
+        [
+            ["for the alliance", "for the king", "long live the king"],
+            "Hoorah"
+        ],
+        [
+            ["documenta", "coffee"],
+            "JonFavreauShaking"
+        ],
+        [
+            "sea",
+            "TheSeaIsAlwaysRight"
+        ],
+        [
+            "rue",
+            "RueThisDay"
+        ],
+        [
+            "bronner",
+            "ThatIsWhatTheyUsedToCallMe"
+        ],
+        [
+            "hello there",
+            "GeneralKenobi"
+        ],
+        [
+            ["heretic", "heresy"],
+            "Heretic"
+        ],
+        [
+            ["traitor", "treason"],
+            "NayItWasHeresy"
+        ],
+        [
+            "vexor",
+            "WhyDidYouSayThatName"
+        ],
+        [
+            "jahan",
+            "TheWhiteWizard"
+        ],
+        [
+            "die",
+            "ThenIShallDieAsOneOfThem"
+        ],
+        [
+            "weevil",
+            "LesserOfTwoWeevils"
+        ],
+        [
+            " late",
+            "AWizardIsNeverLate"
+        ],
+        [
+            "i wish",
+            "SoDoAllWhoLiveToSeeSuchTimes"
+        ],
+        [
+            "one day",
+            "ButItIsNotThisDay"
+        ],
+        [
+            ["victor", "win", " ftw"],
+            "WeHaveVictory"
+        ],
+        [
+            "you have my ",
+            "AndMyAxe"
+        ],
+        [
+            "sand",
+            "IDontLikeSand"
+        ],
+        [
+            ["potato", "tater"],
+            "PoTaToes"
+        ],
+        [
+            "mein",
+            "TheyCallItEinMine"
+        ],
+        [
+            "mine",
+            "TheyCallItAMine"
+        ],
+        [
+            ["lift", "elevator"],
+            "TerrifiedHamsterMarine"
+        ],
+        [
+            "frontflip",
+            "TRexFlip-Reversed"
+        ],
+        [
+            ["sbonc", "sponc"],
+            "SquashCourt"
+        ],
+        [
+            ["bonk bat", "bonketh bat"],
+            "StayDownFinalWarning"
+        ],
+        [
+            "flip",
+            "TRexFlip"
+        ],
+        [
+            "borg",
+            "HesBeenMyFriendThroughManyDangers"
+        ],
+        [
+            "wrex",
+            "WrexShepard"
+        ]
+    ],
+    "summons": [
+        "OathesYouHaveTaken",
+        "ISummonYouToFulfillYourOath"
+    ],
+    "tag": [
+        "StormtrooperTag",
+        "OnMyWay",
+        "FinishTheFight",
+        "LydiaDragonFly"
+    ],
+    "dance": [
+        "BlueyIntro",
+        "TRexDancePole",
+        "TRexDanceSpin",
+        "MontyPythonDance-1",
+        "MontyPythonDance-2",
+        "SimbaPullFace",
+        "SkyrimDragonGlitch",
+        "GollumFlail",
+        "PotatoDance",
+        "ESODance"
+    ]
+}
