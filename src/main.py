@@ -24,10 +24,11 @@ STATIC_DATA_PATH: Final[str] = 'data/static/'
 class Emote:
     """TODO ..."""
 
-    def __init__(self, name: str, value: str, triggers: list[str] | None = None):
+    def __init__(self, name: str, emote: str, triggers: list[str] | None = None, fallback: str | None = None):
         self.name = name
-        self.value = value
+        self.emote = emote
         self.triggers = triggers if (triggers is not None) else []
+        self.fallback = fallback if (fallback is not None) else None
 
 class Emotes(Enum):
     """Enum of custom emotes"""
@@ -46,9 +47,10 @@ class Emotes(Enum):
     CH = Emote('ch-flag', '🇨🇭', ['cet', 'cest'])
 
     # Custom Emotes
-    ALLIANCE = Emote('theAlliance', '<:theAlliance:899087916251353118>', ['alliance'])
-    DOUBT = Emote('doubt', '<:doubt:1084980452537937940>', ['doubt'])
-    BEANS = Emote('beans', '<:beans:796047923711836210>', ['beans'])
+    ALLIANCE = Emote('theAlliance', '<:theAlliance:899087916251353118>', ['alliance'], '�')
+    DOUBT = Emote('doubt', '<:doubt:1084980452537937940>', ['doubt'], '🇽')
+    BEANS = Emote('beans', '<:beans:796047923711836210>', ['beans'], '🫘')
+    BONK = Emote('bonk', '<:bonk:798539206901235773>', [], '👎🏿')
 
 
 class JerryBot(commands.Bot):
@@ -61,7 +63,15 @@ class JerryBot(commands.Bot):
         with open(os.path.join(STATIC_DATA_PATH, 'gifs.json'), 'r', encoding='utf-8') as file:
             self.GIFS = json.load(file)
 
-        intents = discord.Intents.default()
+        with open(os.path.join(STATIC_DATA_PATH, 'fortune.txt'), 'r', encoding='utf-8') as file:
+            wisdoms = []
+            for line in file:
+                line = line.rstrip() + ' '
+                if (line != ' ') and (line[0] != '#'):
+                    wisdoms.append(line)
+            self.WISDOMS = wisdoms
+
+        intents = discord.Intents.all()
         intents.members = True
         intents.presences = True
         intents.message_content = True
@@ -108,41 +118,139 @@ class JerryBot(commands.Bot):
             for prompt in reaction.value.triggers:
                 if (prompt in message):
                     try:
-                        await context.add_reaction(reaction.value.value)
+                        await context.add_reaction(reaction.value.emote)
                     except discord.errors.HTTPException:
-                        print(f'Error: Unknown Emoji: {reaction.value.name} ({reaction.value.value})')
+                        print(f'Error: Unknown Emoji: {reaction.value.name} ({reaction.value.emote})')
+                        if (reaction.value.fallback is not None):
+                            await context.add_reaction(reaction.value.fallback)
                     break
 
+        # TAG
+
+        # BIBLE REFERENCES
+
         # SOFT COMMANDS
-        ## TAG
+        if ('jerry' in message or 'jezza' in message or 'jeyry' in message):
 
-        ## BIBLE REFERENCES
+            ## REMINDERS
 
-        ## REMINDERS
+            ## BONK
+            if ('bonk' in message):
+                await self.bonk(context, message)
 
-        ## BONK
+            ## SUMMON
+            if ('summon' in message):
+                await self.summon(context)
 
-        ## SUMMON
+            ## DECIDE STEAM GAME
 
-        ## DANCE
-
-        ## DECIDE STEAM GAME
-
-        ## WORDS OF WISDOM
+            ## WORDS OF WISDOM
+            if ('wis' in message):
+                if (self.WISDOMS):
+                    await context.channel.send(random.choice(self.WISDOMS).format('<@' + str(context.author.id) + '>'))
+                else:
+                    print('Error: fortune.txt is blank')
+                    await context.channel.send("Hmm. I can't think of anything... 🤔")
+                return
 
         # RESPOND
+        ## DANCE
+        if ('dance' in message):
+            await context.channel.send(random.choice(self.GIFS['dances']))
+            return
+
+        ## GIFS
         for response in self.GIFS['responses']:
             if (isinstance(response[0], str)): # single prompt
                 response[0] = [response[0]]
 
             for prompt in response[0]:
                 if (prompt in message):
-                    await context.channel.send(f'https://raw.githubusercontent.com/Razzula/jerry-bot/v2.0/data/static/gifs/{response[1]}.gif') # TODO: switch to master branch
+                    await self.sendGIF(context.channel, response[1])
                     return
 
         # REGURGITATE GITHUB WEBHOOKS
 
+    # COMMANDS
+    async def bonk(self, context: Any, target: str):
+        """Bonks a user."""
 
+        if (not self.isUserAdmin(context.author)):
+
+            await self.reactWithCustomEmote(context, Emotes.BONK.value)
+
+            await self.sendGIF(context.channel, 'YouHaveNoPowerHere')
+            return
+
+        targets = self.getUsersFromMentions(self.extractMentionsFromMessage(context.content))
+        if (targets):
+
+            # TODO: check bot is authorised
+
+            bonkRole = discord.utils.get(context.guild.roles, name='Bonk Jail') # TODO: dynamic
+
+            toBonk = []
+            toUnbonk = []
+
+            if (bonkRole):
+
+                for target in targets:
+                    user = context.guild.get_member(int(target))
+
+                    if (bonkRole in user.roles):  # already bonked
+                        toUnbonk.append(user)
+                    else:
+                        toBonk.append(user)
+
+                if (not toBonk): # only unbonk if no new bonks
+                    for user in toUnbonk:
+                        await user.remove_roles(bonkRole)
+
+                    # inform of unbonk
+                    await context.channel.send(', '.join([u.mention for u in toUnbonk]))
+                    await self.sendGIF(context.channel, 'IReleaseYou')
+
+                else: # bonk all
+                    for user in toBonk:
+                        await user.add_roles(bonkRole) # TODO ensure this role is not higher than the bot
+
+                    # message channel
+                    await self.sendGIF(context.channel, random.choice(self.GIFS['bonks']))
+                    if (random.randint(0, 5) <= 2):
+                        await context.channel.send('https://www.youtube.com/watch?v=2D7P1khV40U') # The Lion King 2 Not One Of Us
+
+                    # message bonk jail
+                    bonkJail = discord.utils.get(context.guild.channels, name='bonk-jail')
+                    if (bonkJail is not None):
+                        await bonkJail.send(', '.join([u.mention for u in toBonk]))
+                        await self.sendGIF(bonkJail, self.GIFS['shames'])
+                    else:
+                        print("`#bonk-jail` channel does not exist")
+
+            else:
+                print("Role `Bonk Jail` does not exist")
+                await self.sendGIF(context.channel, random.choice(self.GIFS['bonks']))
+
+        else:  # no user specified
+            await context.add_reaction('❓')
+
+    async def summon(self, context: Any):
+        """Summons a user or role to the current channel."""
+
+        target = self.extractSmallestMentionSubset(context.content)
+        if (target):
+
+            # TODO: subtle
+            # TODO: reminders (reply, not just send message)
+
+            await context.add_reaction('👍🏿')
+            await context.channel.send(target)
+            await self.sendGIF(context.channel, random.choice(self.GIFS['summons']))
+
+        else:  # no user specified
+            await context.add_reaction('❓')
+
+    # HELPER FUNCTIONS
     def getActivity(self):
         """Determine the bot's activity and profile picture based on the current date."""
 
@@ -175,6 +283,63 @@ class JerryBot(commands.Bot):
                 activity = 'Careless Whisper'
 
         return activity, avatar
+
+    def extractMentionsFromMessage(self, message: str) -> dict[str, list[str] | bool]:
+        """Extracts mentions from a message."""
+
+        return {
+            'global': re.search(r'@everyone|@here', message) is not None,
+            'users': re.findall(r'<@!?(\d+)>', message),
+            'roles': re.findall(r'<@&(\d+)>', message),
+        }
+
+    def extractSmallestMentionSubset(self, message: str) -> str | bool:
+        """Extracts the smallest subset of mentions from a message."""
+
+        mentions = self.extractMentionsFromMessage(message)
+        if (mentions['global']):
+            return '@everyone'
+
+        output = []
+        for mention in mentions['users']:
+            output.append(f'<@{mention}>')
+        for mention in mentions['roles']:
+            output.append(f'<@&{mention}>')
+
+        if (len(output) > 0):
+            return ', '.join(output)
+        return False
+
+    async def sendGIF(self, channel: Any, gifName: str):
+        """Sends a GIF to the current channel."""
+
+        await channel.send(f'https://raw.githubusercontent.com/Razzula/jerry-bot/v2.0/data/static/gifs/{gifName}.gif') # TODO: switch to master branch
+
+    async def reactWithCustomEmote(self, context: Any, emote: Emote):
+        """Reacts to a message with a custom emote."""
+
+        try:
+            await context.add_reaction(emote.emote)
+        except discord.errors.HTTPException:
+            await context.add_reaction(emote.fallback)
+
+    def isUserAdmin(self, user: Any) -> bool:
+        """Checks if a user has admin permissions."""
+
+        return user.guild_permissions.administrator
+
+    def getUsersFromMentions(self, mentions: dict[str, list[str] | bool]) -> list[Any]:
+        """Gets user objects from a list of mentions."""
+
+        users = []
+        for user in mentions['users']:
+            users.append(user)
+
+        for role in mentions['roles']:
+            # TODO: get users from role
+            pass
+
+        return users
 
 if ((TOKEN := os.environ.get('DISCORD_BOT_TOKEN')) is not None):
     bot = JerryBot()
