@@ -147,7 +147,7 @@
         "FinishTheFight",
         "LydiaDragonFly"
     ],
-    "dance": [
+    "dances": [
         "BlueyIntro",
         "TRexDancePole",
         "TRexDanceSpin",
@@ -158,5 +158,15 @@
         "GollumFlail",
         "PotatoDance",
         "ESODance"
+    ],
+    "bonks" : [
+        "BonkMega",
+        "BonkGuillotine",
+        "BonkYoshi"
+    ],
+    "shames": [
+        "CaptainAmericaSitDown",
+        "HeIsNotOneOfUs",
+        "DeceptionDisgrace"
     ]
 }
