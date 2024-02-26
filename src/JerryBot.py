@@ -83,7 +83,7 @@ class JerryCoreCog(CustomCog):
         ])
 
         self.BOT: Final[commands.Bot] = bot
-        self.BOT_HELPER: Final[BotUtils] = botUtils
+        self.BOT_UTILS: Final[BotUtils] = botUtils
 
         self.BOT_ALIASES: Final[list[str]] = botNames
         self.GIFS: Final[dict[str, list[str]]] = gifs
@@ -123,7 +123,7 @@ class JerryCoreCog(CustomCog):
         await self.BOT.change_presence(status=discord.Status.invisible) # appear offline initially, whilst bot is setting up
 
         # ACTIVITY
-        activity, avatar = self.BOT_HELPER.getActivity()
+        activity, avatar = self.BOT_UTILS.getActivity()
 
         # profile picture
         if (not os.environ.get('DEBUG')):  # disable avatar change in debug mode, as excessive calls will result in a timeout
@@ -155,7 +155,7 @@ class JerryCoreCog(CustomCog):
         for reaction in Emotes:
             for prompt in reaction.value.triggers:
                 if (prompt in message):
-                    await self.BOT_HELPER.reactWithEmote(context, reaction.value)
+                    await self.BOT_UTILS.reactWithEmote(context, reaction.value)
                     break
 
         # TAG
@@ -192,7 +192,7 @@ class JerryCoreCog(CustomCog):
             # RESPOND
             ## DANCE
             if ('dance' in message):
-                await self.BOT_HELPER.sendGIF(context.channel, random.choice(self.GIFS['dances']))
+                await self.BOT_UTILS.sendGIF(context.channel, random.choice(self.GIFS['dances']))
                 return
 
             ## GIFS
@@ -202,7 +202,7 @@ class JerryCoreCog(CustomCog):
 
                 for prompt in response[0]:
                     if (prompt in message):
-                        await self.BOT_HELPER.sendGIF(context.channel, response[1])
+                        await self.BOT_UTILS.sendGIF(context.channel, response[1])
                         return
 
         # REGURGITATE GITHUB WEBHOOKS
