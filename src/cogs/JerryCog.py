@@ -14,8 +14,8 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import has_permissions, MissingPermissions
 
-from BotHelper import BotUtils, Emotes, Emote
-from CogTemplate import CustomCog
+from BotUtils import BotUtils, Emotes, Emote
+from cogs.CogTemplate import CustomCog
 
 class JerryCog(CustomCog):
     """TODO"""
@@ -25,8 +25,8 @@ class JerryCog(CustomCog):
             ['party',               '🎉'],
             ['pick `a`,`b`,...',    '❔'],
             ['roll `n`',            '🎲'],
-            ['bonk `@`',              Emotes.BONK.value.emote],
-            ['summon `@`',            '🎺'],
+            ['bonk `@`',            Emotes.BONK.value.emote],
+            ['summon `@`',          '🎺'],
         ])
 
         self.BOT: Final[commands.Bot] = bot
