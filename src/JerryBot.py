@@ -1,23 +1,18 @@
-# pylint: disable=fixme, line-too-long, invalid-name, superfluous-parens, unused-import, trailing-whitespace, arguments-differ
+# pylint: disable=fixme, line-too-long, invalid-name, superfluous-parens, trailing-whitespace, arguments-differ
 """TODO ..."""
 import os
 import random
-import time
-from datetime import datetime, timedelta
 import asyncio
-import re
 import json
-from enum import Enum
 from typing import Final, Any
-from dotenv import load_dotenv
 import logging
+from dotenv import load_dotenv
 import discord
 from discord.ext import commands
-from discord.ext.commands import has_permissions, MissingPermissions
-import apis.steamAPI
-import apis.bibleAPI
 
-from BotUtils import BotUtils, Emotes, Emote
+from BotUtils import BotUtils, Emotes
+from apis.bibleAPI import BibleAPI
+
 from cogs.CogTemplate import CustomCog
 from cogs.JerryCog import JerryCog
 
@@ -83,7 +78,9 @@ class JerryCoreCog(CustomCog):
         ])
 
         self.BOT: Final[commands.Bot] = bot
+
         self.BOT_UTILS: Final[BotUtils] = botUtils
+        self.BIBLE_API = BibleAPI(STATIC_DATA_PATH)
 
         self.BOT_ALIASES: Final[list[str]] = botNames
         self.GIFS: Final[dict[str, list[str]]] = gifs
@@ -161,6 +158,13 @@ class JerryCoreCog(CustomCog):
         # TAG
 
         # BIBLE REFERENCES
+        references: list[list[str]] | None = self.BIBLE_API.getBibleReferences(message)
+        if (references is not None):
+            for reference in references:
+                await context.channel.send(reference[0])
+                for chunk in reference[1]:
+                    await context.channel.send(f'> {chunk}')
+            return
 
         # SOFT COMMANDS
         for name in self.BOT_ALIASES: # jerry, ...
@@ -234,7 +238,7 @@ class JerryCoreCog(CustomCog):
             prefix = prefix[0]
 
         for field in self.helpList:
-            embed.add_field(name=f'{prefix}{field[0]}', value=field[1])
+            embed.add_field(name=f'{prefix}{field[0]}', value=field[1]) # TODO: verbosity level
 
         await context.send(embed=embed)
 
