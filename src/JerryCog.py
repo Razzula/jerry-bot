@@ -22,14 +22,55 @@ class JerryCog(CustomCog):
 
     def __init__(self, bot: commands.Bot, botUtils: BotUtils, gifs: dict[str, list[str]]):
         super().__init__('JerryCog', [
-            ['bonk @', Emotes.BONK.value.emote],
-            ['summon @', '🎺'],
+            ['party',               '🎉'],
+            ['pick `a`,`b`,...',    '❔'],
+            ['roll `n`',            '🎲'],
+            ['bonk `@`',              Emotes.BONK.value.emote],
+            ['summon `@`',            '🎺'],
         ])
 
         self.BOT: Final[commands.Bot] = bot
         self.BOT_UTILS: Final[BotUtils] = botUtils
 
         self.GIFS: Final[dict[str, list[str]]] = gifs
+
+    @commands.command(name='party')
+    async def dance(self, context: Any):
+        """Sends a random dance GIF."""
+
+        await self.BOT_UTILS.sendGIF(context.channel, random.choice(self.GIFS['dances']))
+
+    @commands.command(name='pick', pass_context=True, aliases=['choose', 'select'])
+    async def pick(self, context: Any, *, arg: str | None) -> None:
+        """Picks a random choice from a list of comma-separated choices."""
+
+        if (arg is None):
+            await context.channel.send('Is this some kind of trick question..?')
+            return
+
+        choices = arg.split(',')
+        if (len(choices) == 1):
+            await context.channel.send("Hmm.. that's a _really_ tough one.")
+            await context.channel.send(choices[0])
+        else:
+            await context.channel.send(random.choice(choices))
+
+    @commands.command(name='roll', pass_context=True)
+    async def roll(self, context: Any, arg: str | None) -> None:
+        """Rolls a random number between 1 and the specified number."""
+
+        if (arg is None):
+            # if no number is specified, just do a forward roll, hehe
+            await self.BOT_UTILS.sendGIF(context.channel, 'PandaRoll')
+
+        else:
+            try:
+                result = random.randint(1, (int)(arg))
+            except ValueError:
+                await self.BOT_UTILS.reactWithEmote(context, Emotes.EKKY_DISAPPROVES.value)
+                return
+
+            await context.channel.send(result)
 
     @commands.command(name='bonk', pass_context=True)
     async def bonk(self, context: Any, *args):
@@ -97,6 +138,7 @@ class JerryCog(CustomCog):
     @commands.command(name='summon', pass_context=True)
     async def summon(self, context: Any, *args):
         """Summons a user or role to the current channel."""
+
         targets = self.BOT_UTILS.extractSmallestMentionSubset(' '.join(args))
         if (targets):
 

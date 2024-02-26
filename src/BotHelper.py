@@ -39,6 +39,7 @@ class Emotes(Enum):
     DOUBT = Emote('doubt', '<:doubt:1084980452537937940>', ['doubt'], '🇽')
     BEANS = Emote('beans', '<:beans:796047923711836210>', ['beans'], '🫘')
     BONK = Emote('bonk', '<:bonk:798539206901235773>', [], '👎🏿')
+    EKKY_DISAPPROVES = Emote('ekky_disapproves', '<:ekkydisapproves:876951860144144454>', [], '👎🏿')
 
 class BotUtils:
     """TODO"""
