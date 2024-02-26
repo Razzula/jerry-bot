@@ -1,4 +1,4 @@
-# pylint: disable=fixme, line-too-long, invalid-name, superfluous-parens, unused-import, trailing-whitespace, arguments-differ
+# pylint: disable=fixme, line-too-long, invalid-name, superfluous-parens, trailing-whitespace, arguments-differ
 """TODO"""
 from enum import Enum
 import os
@@ -40,6 +40,10 @@ class Emotes(Enum):
     BEANS = Emote('beans', '<:beans:796047923711836210>', ['beans'], '🫘')
     BONK = Emote('bonk', '<:bonk:798539206901235773>', [], '👎🏿')
     EKKY_DISAPPROVES = Emote('ekky_disapproves', '<:ekkydisapproves:876951860144144454>', [], '👎🏿')
+
+    # Steam
+    STEAM = Emote('steam', '<:steam:1042900928048681030>', ['steam'], '�')
+    STEAM_BLACK = Emote('steam_black', '<:steam:1044305789554266162>', [], '�')
 
 class BotUtils:
     """TODO"""

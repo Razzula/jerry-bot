@@ -1,18 +1,9 @@
-# pylint: disable=fixme, line-too-long, invalid-name, superfluous-parens, unused-import, trailing-whitespace, arguments-differ
+# pylint: disable=fixme, line-too-long, invalid-name, superfluous-parens, trailing-whitespace, arguments-differ, import-not-found
 """TODO ..."""
-import os
 import random
-import time
-from datetime import datetime, timedelta
-import asyncio
-import re
-import json
-from enum import Enum
 from typing import Final, Any
-from dotenv import load_dotenv
 import discord
 from discord.ext import commands
-from discord.ext.commands import has_permissions, MissingPermissions
 
 from BotUtils import BotUtils, Emotes, Emote
 from cogs.CogTemplate import CustomCog
