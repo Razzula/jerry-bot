@@ -32,7 +32,7 @@ class JerryCog(CustomCog):
         self.GIFS: Final[dict[str, list[str]]] = gifs
 
     @commands.command(name='bonk', pass_context=True)
-    async def bonk(self, context: Any, target: str):
+    async def bonk(self, context: Any, *args):
         """Bonks a user."""
 
         if (not self.BOT_UTILS.isUserAdmin(context.author)):
@@ -42,7 +42,7 @@ class JerryCog(CustomCog):
             await self.BOT_UTILS.sendGIF(context.channel, 'YouHaveNoPowerHere')
             return
 
-        targets = self.BOT_UTILS.getUsersFromMentions(self.BOT_UTILS.extractMentionsFromMessage(target))
+        targets = self.BOT_UTILS.getUsersFromMentions(self.BOT_UTILS.extractMentionsFromMessage(' '.join(args)))
         if (targets):
 
             # TODO: check bot is authorised
@@ -95,17 +95,16 @@ class JerryCog(CustomCog):
             await self.BOT_UTILS.reactWithEmoteStr(context, '❓')
 
     @commands.command(name='summon', pass_context=True)
-    async def summon(self, context: Any, target: str):
+    async def summon(self, context: Any, *args):
         """Summons a user or role to the current channel."""
-
-        targets = self.BOT_UTILS.extractSmallestMentionSubset(target)
+        targets = self.BOT_UTILS.extractSmallestMentionSubset(' '.join(args))
         if (targets):
 
             # TODO: subtle
             # TODO: reminders (reply, not just send message)
 
             await self.BOT_UTILS.reactWithEmoteStr(context, '👍🏿')
-            await context.channel.send(target)
+            await context.channel.send(targets)
             await self.BOT_UTILS.sendGIF(context.channel, random.choice(self.GIFS['summons']))
 
         else:  # no user specified

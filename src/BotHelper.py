@@ -122,7 +122,7 @@ class BotUtils:
                 await self.reactWithEmoteStr(context, emote.fallback)
 
     async def reactWithEmoteStr(self, context: commands.context.Context | discord.message.Message, emoteString: str):
-        """Sends a GIF to the current channel."""
+        """Sends an string emote to the current channel."""
 
         if (isinstance(context, commands.context.Context)):
             await context.message.add_reaction(emoteString)
