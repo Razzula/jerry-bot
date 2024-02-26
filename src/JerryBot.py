@@ -14,12 +14,12 @@ import logging
 import discord
 from discord.ext import commands
 from discord.ext.commands import has_permissions, MissingPermissions
-import steamAPI
-import bibleAPI
+import apis.steamAPI
+import apis.bibleAPI
 
-from BotHelper import BotUtils, Emotes, Emote
-from CogTemplate import CustomCog
-from JerryCog import JerryCog
+from BotUtils import BotUtils, Emotes, Emote
+from cogs.CogTemplate import CustomCog
+from cogs.JerryCog import JerryCog
 
 load_dotenv('token.env')
 
