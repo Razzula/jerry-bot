@@ -1,127 +1,139 @@
+# pylint: disable=fixme, line-too-long, invalid-name, superfluous-parens, trailing-whitespace, arguments-differ
+'''An interface to the Steam API for retrieving TODO.'''
 import os
 import random
+from enum import Enum
+from typing import Any
 import requests
-from dotenv import load_dotenv
 
-load_dotenv("token.env")
-key = os.environ.get("STEAM_API_KEY")
+class SteamAPI:
+    """TODO"""
 
+    class States(Enum):
+        """TODO"""
+        INVALID = 404
+        PRIVATE = 401
 
-def GET(endpoint):
-    response = requests.get(endpoint)
-    if not response:
-        print("Error: " + str(response.status_code))
+    def __init__(self, apiKey: str):
+        self.API_KEY = apiKey
 
-    if response.status_code == 429:  # too many requests
-        raise Exception("429")
+    def get(self, endpoint):
+        """GET request to the Steam API."""
 
-    return response
+        response = requests.get(endpoint, timeout=15)
+        if (not response):
+            print('Error: ' + str(response.status_code)) # TODO: log error
 
+        if (response.status_code == 429):  # too many requests
+            raise requests.exceptions.TooManyRedirects()
 
-def getSharedLibrary(users):
-    # GET LIST OF SHARED GAMES AMONG USERS
+        return response
 
-    games = [None]
-    for user in users:
-        #  GET
-        ## Profile Status
-        response = GET(
-            "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key="
-            + key
-            + "&steamids="
-            + user
-            + "&format=json"
+    def getSharedLibrary(self, users: list[tuple[str, str]]):
+        """Get list of shared games among users."""
+
+        invalidUsers: list[tuple[str, self.States]] = []
+        sharedLibrary: list[str | None] = [None] # we need to know if this is the first iteration
+
+        # GET Profile Status
+        response = self.get(
+            'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key='
+            + self.API_KEY
+            + '&steamids='
+            + ','.join([user[1] for user in users]) # list of steamIDs
+            + '&format=json'
         )
-        if response.status_code == 404:  # not found
-            continue
+        if (response.status_code == 404):
+            # not found; error in url
+            return (None, None)
 
-        result = response.json()
+        steamUsers = response.json().get('response').get('players')
 
-        if len(result["response"]["players"]) == 0:
-            print(f"user ({user}) not found")
-            continue
-        if result["response"]["players"][0]["communityvisibilitystate"] < 3:
-            print(result["response"]["players"][0]["personaname"] + "is not public")
-            continue
+        # process returned Steam users
+        steamIDs: list[str] = []
+        for user in users:
+            validUser = False
 
-        ## Games
-        response = GET(
-            "https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key="
-            + key
-            + "&steamid="
-            + user
-            + "&format=json"
-        )
-        if response.status_code == 404:  # not found
-            continue
+            for steamUser in steamUsers:
+                if (steamUser.get('steamid') == user[1]): # match
 
-        result = response.json()
+                    if (steamUser.get('communityvisibilitystate') < 3):
+                        # user is not public, ergo we cannot access their games
+                        invalidUsers.append((user[0], self.States.PRIVATE))
+                    else:
+                        steamIDs.append(steamUser.get('steamid'))
+                        validUser = True
+                    break
 
-        temp = []
-        if games == [None]:  # first sweep
-            for game in result["response"]["games"]:
-                temp.append(game["appid"])
+            if (not validUser):
+                # user not found
+                invalidUsers.append((user[0], self.States.INVALID))
 
-        else:
-            for game in result["response"]["games"]:
-                if game["appid"] in games:
-                    temp.append(game["appid"])
-            if games == []:
+        # GET Games
+        for steamID in steamIDs: # unfortunately, we need to make a request for each user
+            response = self.get(
+                'https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key='
+                + self.API_KEY
+                + '&steamid='
+                + steamID
+                + '&format=json'
+            )
+            if (response.status_code == 404):
+                # not found; error in url
+                return (None, None)
+
+            result = response.json().get('response').get('games')
+                # interestibgly, we can also see some statistics here, such as:
+                # - playtime
+                # - last played
+            library = [game.get('appid') for game in result]
+
+            if (sharedLibrary == [None]):
+                # first sweep, no need for comparison
+                sharedLibrary = library
+            else:
+                # we need to union the existing list with the new result
+                sharedLibrary = list(set(sharedLibrary) | set(library))
+
+        return (sharedLibrary, invalidUsers)
+
+    def selectGame(self, gamesList: list[str], requireMultiplayer: bool) -> dict[str, Any] | None:
+        """Select a game from the list."""
+
+        localGamesList = gamesList.copy()
+
+        result: dict[str, Any] = {}
+        isMultiplayer = False
+
+        while (len(localGamesList) > 0):
+
+            # select random game
+            appID = random.choice(gamesList)
+
+            # GET App Data
+            response = self.get(
+                f'https://store.steampowered.com/api/appdetails?appids={appID}'
+            )
+            if (response.status_code == 404):
+                # not found; error with ID
+                localGamesList.remove(appID)
+                continue
+
+            result = response.json().get(str(appID)).get('data')
+
+            if (not requireMultiplayer):
                 break
 
-        games = temp.copy()
+            # ensure game is multiplayer
+            if ((categories := result.get('categories')) is not None):
+                for category in categories:
+                    if (category.get('description').lower() == "multi-player"):
+                        isMultiplayer = True
+                        break
 
-    return games
-
-
-def getGame(games, multiplayer):
-    # SELECT GAME FROM LIST
-
-    while True:
-        id = random.choice(games)
-        print(id)
-
-        ## App Data
-        response = GET(
-            "https://store.steampowered.com/api/appdetails?appids=" + str(id)
-        )
-        if response.status_code == 404:  # not found
-            continue
-
-        result = response.json()
-
-        try:
-            if not result[str(id)]["success"]:
-                raise Exception("Request unsuccessful")
-        except:
-            print("Error")
-            return None
-
-        # ensure game is multiplayer
-        for category in result[str(id)]["data"]["categories"]:
-            if category["description"].lower() == "multi-player":
-                multiplayer = False
+            if (isMultiplayer):
                 break
 
-        if not multiplayer:  # requirements is solo, or multi has been found
-            break
+            localGamesList.remove(appID)
 
-        games.remove(id)
-        if games == []:  # no shared multiplayer games
-            print("null")
-            return None
-
-    # print(result[str(id)]['data'])
-    return result[str(id)]["data"]
-
-
-def isValidUser(id):
-    response = GET(f"https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key={key}&steamids={id}&format=json")
-    if response.status_code != 200:
-        return False
-
-    result = response.json()
-    if len(result["response"]["players"]) <= 0:
-        return False
-
-    return result["response"]["players"][0]["personaname"]
+        return result # TODO: return a custom object so that names are immutable
