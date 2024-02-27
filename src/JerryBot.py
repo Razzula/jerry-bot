@@ -11,10 +11,12 @@ import discord
 from discord.ext import commands
 
 from BotUtils import BotUtils, Emotes
+from DatabaseHandler import DatabaseHandler
 from apis.bibleAPI import BibleAPI
 
 from cogs.CogTemplate import CustomCog
 from cogs.JerryCog import JerryCog
+from cogs.SteamCog import SteamCog
 
 load_dotenv('token.env')
 
@@ -32,6 +34,8 @@ class JerryBot:
         with open(os.path.join(STATIC_DATA_PATH, 'gifs.json'), 'r', encoding='utf-8') as file:
             self.GIFS = json.load(file)
 
+        self.DB_HANDLER = DatabaseHandler(os.path.join(DYNAMIC_DATA_PATH, 'global.db'))
+
         self.BOT_UTILS = BotUtils(STATIC_DATA_PATH, DYNAMIC_DATA_PATH)
 
         intents = discord.Intents.all()
@@ -41,6 +45,7 @@ class JerryBot:
         self.JerryCoreCog = JerryCoreCog(self.BOT, self.BOT_UTILS, self.BOT_ALIASES, self.GIFS)
         asyncio.run(self.loadCogs([
             JerryCog(self.BOT, self.BOT_UTILS, self.GIFS),
+            SteamCog(self.BOT, self.BOT_UTILS, self.DB_HANDLER, os.environ.get("STEAM_API_KEY")),
         ]))
 
 
