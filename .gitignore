@@ -1,2 +1,8 @@
 *.env
+*.db
 __pycache__
+
+steamIDs.txt
+.vscode
+.mypy_cache
+.pytest_cache
