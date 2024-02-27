@@ -15,7 +15,7 @@ class SteamCog(CustomCog):
 
     def __init__(self, bot: commands.Bot, botUtils: BotUtils, dbHandler: DatabaseHandler, steamAPIKey: str):
         super().__init__('SteamCog', [
-            ['decide',      Emotes.STEAM.value.emote],
+            ['game',      Emotes.STEAM.value.emote],
             ['steam `id`',  Emotes.STEAM_BLACK.value.emote],
         ])
 
