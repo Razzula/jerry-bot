@@ -137,3 +137,25 @@ class SteamAPI:
             localGamesList.remove(appID)
 
         return result # TODO: return a custom object so that names are immutable
+
+    def isValidUser(self, steamID: str) -> bool:
+        """Check if a user is valid."""
+
+        response = self.get(
+            'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key='
+            + self.API_KEY
+            + '&steamids='
+            + steamID
+            + '&format=json'
+        )
+        if (response.status_code == 404):
+            return False
+
+        results = response.json().get('response').get('players')
+
+        if (len(results) != 1):
+            return False
+        if (results[0].get('communityvisibilitystate') < 3): # private
+            return False
+
+        return True
