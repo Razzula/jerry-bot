@@ -100,3 +100,23 @@ class SteamCog(CustomCog):
         embed.add_field(name='Controller Support ❓', value='') # TODO
 
         return embed
+
+    @commands.command(name='steam', pass_context=True)
+    async def setSteamID(self, context: Any, arg: str | None = None):
+        """TODO"""
+
+        if (arg is None):  # no ID passed
+            self.BOT_UTILS.reactWithEmote(context, Emotes.BONK.value)
+            return
+
+        if (self.STEAM_API.isValidUser(arg)):
+            self.DB_HANDLER.executeOneshot(f'''
+                INSERT INTO steam_ids (discord_id, steam_id) VALUES ('{context.author.id}', '{arg}')
+                ON CONFLICT (discord_id) DO UPDATE SET steam_id = '{arg}'
+            ''')
+
+            await context.channel.send(f"Steam ID set to `{arg}`.")
+
+        else:
+            await self.BOT_UTILS.reactWithEmote(context, Emotes.EKKY_DISAPPROVES.value)
+            await context.channel.send(f"`{arg}` is not a valid Steam ID.")
