@@ -6,6 +6,26 @@ from enum import Enum
 from typing import Any
 import requests
 
+class SteamTag:
+    """TODO"""
+
+    def __init__(self, id: int, name: str, icon: str | None = None):
+        self.id = id
+        self.name = name
+        self.icon = icon
+
+class SteamTags(Enum):
+    """TODO"""
+
+    MULTIPLAYER = SteamTag(1, 'Multi-Player')
+    COOP = SteamTag(9, 'Co-op')
+    COOP_ONLINE = SteamTag(36, 'Online Co-op', '🌐')
+    COOP_LAN = SteamTag(47, 'LAN Co-op', '🖧')
+    SHARED_SCREEN = SteamTag(24, 'Shared/Split Screen', '🖥️')
+    REMOTE_PLAY_TOGETHER = SteamTag(39, 'Remote Play Together', '📶')
+    FULL_CONTROLLER = SteamTag(28, 'Full Controller Support', '🎮')
+    PARTIAL_CONTROLLER = SteamTag(18, 'Partial Controller Support', '⚠️')
+
 class SteamAPI:
     """TODO"""
 
@@ -93,7 +113,7 @@ class SteamAPI:
                 sharedLibrary = library
             else:
                 # we need to union the existing list with the new result
-                sharedLibrary = list(set(sharedLibrary) | set(library))
+                sharedLibrary = list(set(sharedLibrary) & set(library))
 
         return (sharedLibrary, invalidUsers)
 
@@ -136,10 +156,37 @@ class SteamAPI:
 
             localGamesList.remove(appID)
 
-        return result # TODO: return a custom object so that names are immutable
+        # reformat result
+        output: dict[str, Any | None] = {
+            'id': result.get('steam_appid'),
+            'name': result.get('name'),
+            'description': result.get('short_description'),
+            'thumbnail': result.get('header_image'),
+        }
 
-    def isValidUser(self, steamID: str) -> bool:
+        newCategories = dict()
+        if ((categories := result.get('categories')) is not None):
+            for category in categories:
+                newCategories[category.get('id')] = category.get('description')
+
+        output['categories'] = newCategories
+
+        return output
+
+    def isValidUser(self, steamID: str) -> bool | str:
         """Check if a user is valid."""
+
+        result = self.getSteamProfile(steamID)
+        if (
+            result is not None
+            and result.get('communityvisibilitystate') == 3
+        ):
+            return result.get('steamid')
+
+        return False
+
+    def getSteamProfile(self, steamID: str) -> Any | None:
+        """TODO"""
 
         response = self.get(
             'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key='
@@ -149,13 +196,10 @@ class SteamAPI:
             + '&format=json'
         )
         if (response.status_code == 404):
-            return False
+            return None
 
         results = response.json().get('response').get('players')
-
         if (len(results) != 1):
-            return False
-        if (results[0].get('communityvisibilitystate') < 3): # private
-            return False
+            return None
 
-        return True
+        return results[0]

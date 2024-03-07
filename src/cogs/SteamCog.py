@@ -4,7 +4,7 @@ from typing import Final, Any
 from discord.ext import commands
 from discord import Embed, Color
 
-from apis.steamAPI import SteamAPI
+from apis.steamAPI import SteamAPI, SteamTags
 
 from BotUtils import BotUtils, Emotes, Emote
 from DatabaseHandler import DatabaseHandler
@@ -34,7 +34,8 @@ class SteamCog(CustomCog):
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS steam_ids (
                 discord_id VARCHAR(18) PRIMARY KEY,
-                steam_id VARCHAR(17)
+                steam_id VARCHAR(17),
+                username VARCHAR(32)
             )
         ''')
         self.DB_HANDLER.commit()
@@ -89,15 +90,61 @@ class SteamCog(CustomCog):
         embed = Embed(
             title=selectedGame.get('name'),
             color=Color.dark_blue(),
-            description=selectedGame.get('short_description'),
+            description=selectedGame.get('description'),
         )
-        embed.url = f'https://store.steampowered.com/app/{selectedGame["steam_appid"]}'
-        embed.set_thumbnail(url=selectedGame['header_image'])
+        embed.url = f'https://store.steampowered.com/app/{selectedGame["id"]}'
+        embed.set_thumbnail(url=selectedGame['thumbnail'])
 
+        categories = selectedGame['categories']
+
+        # Multiplayer
         if (multiplayer):
-            embed.add_field(name='Multiplayer ✅', value='')
-            embed.add_field(name='Cooperative ❓', value='') # TODO
-        embed.add_field(name='Controller Support ❓', value='') # TODO
+            embed.add_field(name='Multiplayer', value='✅')
+
+            # Co-Op
+            coopIcon = ''
+
+            if (SteamTags.COOP.value.id in categories):
+                for tag in [SteamTags.COOP_ONLINE, SteamTags.COOP_LAN, SteamTags.SHARED_SCREEN]:
+                    if (categories.get(tag.value.id)):
+                        coopIcon += tag.value.icon
+            else:
+                coopIcon = '❌'
+            embed.add_field(name='Cooperative', value=coopIcon if (coopIcon is not '') else '✅')
+
+        # Controller Support
+        controllerIcon = None
+        for tag in [SteamTags.FULL_CONTROLLER, SteamTags.PARTIAL_CONTROLLER]:
+            if (categories.get(tag.value.id)):
+                controllerIcon = tag.value.icon
+                break
+        embed.add_field(name='Controller Support', value=controllerIcon if (controllerIcon is not None) else '❌')
+
+        return embed
+
+    def getUserEmbed(self, steamID: str) -> Embed:
+        """TODO"""
+        userData = self.STEAM_API.getSteamProfile(steamID)
+
+        embed = Embed(
+            title=userData.get('personaname'),
+            color=Color.dark_blue(),
+            # description=userData.get('realname'),
+        )
+        embed.url = userData.get('profileurl')
+        embed.set_thumbnail(url=userData.get('avatarfull'))
+
+        # CURRENT STATUS
+        if (userData.get('personastate') == 1):
+            embed.add_field(name='Online', value='🟢')
+        else:
+            embed.add_field(name='Offline', value='🔴')
+        # VISIBILITY
+        if (userData.get('communityvisibilitystate') == 3):
+            embed.add_field(name='Public', value='👁')
+        else:
+            embed.add_field(name='Private', value='🔒')
+
 
         return embed
 
@@ -106,16 +153,21 @@ class SteamCog(CustomCog):
         """TODO"""
 
         if (arg is None):  # no ID passed
-            self.BOT_UTILS.reactWithEmote(context, Emotes.BONK.value)
-            return
 
-        if (self.STEAM_API.isValidUser(arg)):
+            res = self.DB_HANDLER.executeOneshot(f"SELECT steam_id FROM steam_ids WHERE discord_id = '{context.author.id}'")
+            if (res):
+                embed = self.getUserEmbed(res[0][0])
+                await context.channel.send(embed=embed)
+            else:
+                await context.channel.send(f'You have not set a Steam ID yet. Use `!steam <your_steam_id>` to resolve this.')
+
+        elif (steamID := self.STEAM_API.isValidUser(arg)):
             self.DB_HANDLER.executeOneshot(f'''
-                INSERT INTO steam_ids (discord_id, steam_id) VALUES ('{context.author.id}', '{arg}')
-                ON CONFLICT (discord_id) DO UPDATE SET steam_id = '{arg}'
+                INSERT INTO steam_ids (discord_id, steam_id, username) VALUES ('{context.author.id}', '{steamID}', '{context.author.name}')
+                ON CONFLICT (discord_id) DO UPDATE SET steam_id = '{steamID}'
             ''')
 
-            await context.channel.send(f"Steam ID set to `{arg}`.")
+            await context.channel.send(f"Steam ID set to `{steamID}`.")
 
         else:
             await self.BOT_UTILS.reactWithEmote(context, Emotes.EKKY_DISAPPROVES.value)
