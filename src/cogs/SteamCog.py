@@ -14,6 +14,9 @@ class SteamCog(CustomCog):
     """TODO"""
 
     def __init__(self, bot: commands.Bot, botUtils: BotUtils, dbHandler: DatabaseHandler, steamAPIKey: str):
+
+        self.DB_HANDLER: Final[DatabaseHandler] = dbHandler
+
         super().__init__('SteamCog', [
             ['game',      Emotes.STEAM.value.emote],
             ['steam `id`',  Emotes.STEAM_BLACK.value.emote],
@@ -23,9 +26,6 @@ class SteamCog(CustomCog):
         self.BOT_UTILS: Final[BotUtils] = botUtils
 
         self.STEAM_API: Final[SteamAPI] = SteamAPI(steamAPIKey)
-
-        self.DB_HANDLER: Final[DatabaseHandler] = dbHandler
-        self.setupDatabase()
 
     def setupDatabase(self):
         """TODO"""
