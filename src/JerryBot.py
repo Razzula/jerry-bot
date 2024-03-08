@@ -44,7 +44,7 @@ class JerryBot:
         # Cogs
         self.JerryCoreCog = JerryCoreCog(self.BOT, self.BOT_UTILS, self.BOT_ALIASES, self.GIFS)
         asyncio.run(self.loadCogs([
-            JerryCog(self.BOT, self.BOT_UTILS, self.GIFS),
+            JerryCog(self.BOT, self.BOT_UTILS, self.DB_HANDLER, self.GIFS),
             SteamCog(self.BOT, self.BOT_UTILS, self.DB_HANDLER, os.environ.get("STEAM_API_KEY")),
         ]))
 
@@ -176,6 +176,9 @@ class JerryCoreCog(CustomCog):
             if (name in message):
 
                 ## REMINDERS
+                if ('remind' in message):
+                    await self.callCommand('JerryCog', JerryCog.setReminder, context, message)
+                    return
 
                 ## BONK
                 if ('bonk' in message):

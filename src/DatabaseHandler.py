@@ -7,9 +7,15 @@ class DatabaseHandler:
 
     def __init__(self, dbPath: str):
         self.DB_CONNECTION = sqlite3.connect(dbPath)
+        self.CACHE: DatabaseHandler | None = None
 
     def __del__(self):
         self.DB_CONNECTION.close()
+
+    def setupCache(self):
+        """TODO"""
+        if (self.CACHE is None):
+            self.CACHE = DatabaseHandler(':memory:')
 
     def getCursor(self):
         """TODO"""
