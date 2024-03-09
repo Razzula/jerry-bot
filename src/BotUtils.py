@@ -111,10 +111,15 @@ class BotUtils:
             return ', '.join(output)
         return False
 
+    def getGIF(self, gifName: str):
+        """Gets a GIF from the static data folder."""
+
+        return f'https://raw.githubusercontent.com/Razzula/jerry-bot/v2.0/data/static/gifs/{gifName}.gif' # TODO: switch to master branch
+
     async def sendGIF(self, channel: Any, gifName: str):
         """Sends a GIF to the current channel."""
 
-        await channel.send(f'https://raw.githubusercontent.com/Razzula/jerry-bot/v2.0/data/static/gifs/{gifName}.gif') # TODO: switch to master branch
+        await channel.send(self.getGIF(gifName))
 
     async def reactWithEmote(self, context: commands.context.Context | discord.message.Message, emote: Emote):
         """Sends an Emote object to the current channel, using the fallback, if needed."""
