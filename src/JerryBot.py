@@ -234,21 +234,20 @@ class JerryCoreCog(CustomCog):
     async def help(self, context: Any, arg: str | None = None):
         """Displays the help menu."""
 
+        prefix = await self.BOT.get_prefix(context)
+        if (isinstance(prefix, list)):
+            prefix = prefix[0]
+
         if (arg is None): # list commands
             embed = discord.Embed(
                 title='What can men do against such reckless hate?',
                 color=discord.Color.red()
             )
 
-            prefix = await self.BOT.get_prefix(context)
-            if (isinstance(prefix, list)):
-                prefix = prefix[0]
-
             for field in self.helpList:
                 embed.add_field(name=f'{prefix}{field.get("short")}', value=field.get('icon'))
 
             embed.set_footer(text=f'Use `{prefix}help <command>` for more details.')
-
 
         else: # show specific details for a command
 
@@ -260,11 +259,11 @@ class JerryCoreCog(CustomCog):
             if (helpList is not None):
 
                 embed = discord.Embed(
-                    title=f'{arg} {helpList.get("icon")}',
+                    title=f'{prefix}{arg} {helpList.get("icon")}',
                     color=discord.Color.red(),
                 )
 
-                embed.add_field(name=helpList['short'], value=helpList['description'])
+                embed.add_field(name=f'{prefix}{helpList["short"]}', value=helpList['description'])
 
                 if (aliases := helpList.get('aliases')):
                     if (len(aliases) > 1):

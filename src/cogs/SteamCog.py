@@ -1,6 +1,7 @@
 # pylint: disable=fixme, line-too-long, invalid-name, superfluous-parens, trailing-whitespace, arguments-differ
 """TODO ..."""
 from typing import Final, Any
+import json
 from discord.ext import commands
 from discord import Embed, Color
 
@@ -19,7 +20,7 @@ class SteamCog(CustomCog):
 
         super().__init__('SteamCog', [
             { 'aliases': ['game'], 'short': 'game', 'icon': Emotes.STEAM.value.emote, 'description': 'Select a game to play from your Steam library. If you are in a voice channel, it will select a shared game among all active users.' },
-            { 'aliases': ['steam'], 'short': 'steam `id`', 'icon': Emotes.STEAM_BLACK.value.emote, 'description': 'Set your Steam ID for API access.' },
+            { 'aliases': ['steam'], 'short': 'steam `id`', 'icon': Emotes.STEAM_BLACK.value.emote, 'description': 'Set your Steam ID for API access. Use with no arguments to see your current profile.' },
         ])
 
         self.BOT: Final[commands.Bot] = bot
@@ -55,17 +56,28 @@ class SteamCog(CustomCog):
                 activeUsers.append(str(user.id))
 
         # get steam ids of users
-        temp = self.DB_HANDLER.arrayToSqlInArgument(activeUsers)
-        res = self.DB_HANDLER.executeOneshot(f'SELECT discord_id, steam_id FROM steam_ids WHERE discord_id IN {temp}')
+        discordIDList = self.DB_HANDLER.arrayToSqlInArgument(activeUsers)
 
-        if (len(res) < len(activeUsers)):
-            # not all users have a steam id
-            await context.channel.send(f"Sorry, I couldn't find a valid Steam ID for <@???>.\nPlease use `!steam <your_steam_id>` to resolve this.")
-            return
+        # attempt to use cache
+        cachedRes = self.DB_HANDLER.getFromCache('SteamCog', discordIDList)
+        if (cachedRes is not None):
+            # use cached data
+            sharedGameLibrary = json.loads(cachedRes)
+        else:
+            # fetch data from db
+            res = self.DB_HANDLER.executeOneshot(f'SELECT discord_id, steam_id FROM steam_ids WHERE discord_id IN {discordIDList}')
 
-        # get shared game library
-        # TODO caching
-        sharedGameLibrary, invalidUsers = self.STEAM_API.getSharedLibrary(res) # TODO: handle invalidUsers
+            if (len(res) < len(activeUsers)):
+                # not all users have a steam id
+                await context.channel.send(f"Sorry, I couldn't find a valid Steam ID for <@???>.\nPlease use `!steam <your_steam_id>` to resolve this.")
+                return
+
+            # get shared game library
+            sharedGameLibrary, invalidUsers = self.STEAM_API.getSharedLibrary(res) # TODO: handle invalidUsers
+
+            # cache result
+            # TODO: handle errors first (do not cache if error)
+            self.DB_HANDLER.storeInCache('SteamCog', discordIDList, json.dumps(sharedGameLibrary))
 
         # select game
         if (sharedGameLibrary == [None]): # TODO: handle this properly
@@ -76,7 +88,7 @@ class SteamCog(CustomCog):
 
         else:
             gameEmbed = self.getGameEmbed(
-                sharedGameLibrary, multiplayer=(len(res) > 1) # game must be multi-player if multiple users
+                sharedGameLibrary, multiplayer=(len(activeUsers) > 1) # game must be multi-player if multiple users
             )
             await context.channel.send(embed=gameEmbed)
             # TODO: handle voting
@@ -110,7 +122,7 @@ class SteamCog(CustomCog):
                         coopIcon += tag.value.icon
             else:
                 coopIcon = '❌'
-            embed.add_field(name='Cooperative', value=coopIcon if (coopIcon is not '') else '✅')
+            embed.add_field(name='Cooperative', value=coopIcon if (coopIcon != '') else '✅')
 
         # Controller Support
         controllerIcon = None
