@@ -31,6 +31,8 @@ PERSPECTIVE_CONVERTOR = {
     "you'll": "they'll",
 }
 
+MESSAGE_SEPERATOR = r'\N'
+
 class JerryCog(CustomCog):
     """TODO"""
 
@@ -65,6 +67,18 @@ class JerryCog(CustomCog):
             )
         ''')
         self.DB_HANDLER.commit()
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        """Initializes the bot when it is ready."""
+
+        # enqueue all reminders # TODO optimise this to minimise active threads
+        data = self.DB_HANDLER.executeOneshot('''
+            SELECT message_id FROM reminders
+        ''')
+
+        for reminder in data:
+            asyncio.create_task(self.queueReminder(reminder[0]))
 
     @commands.command(name='party')
     async def dance(self, context: Any):
@@ -175,11 +189,12 @@ class JerryCog(CustomCog):
         if (targets):
 
             # TODO: subtle
-            # TODO: reminders (reply, not just send message)
 
+            await self.enqueueReminder(context, [
+                targets,
+                self.BOT_UTILS.getGIF(random.choice(self.GIFS['summons']))
+            ])
             await self.BOT_UTILS.reactWithEmoteStr(context, '👍🏿')
-            await context.channel.send(targets)
-            await self.BOT_UTILS.sendGIF(context.channel, random.choice(self.GIFS['summons']))
 
         else:  # no user specified
             await self.BOT_UTILS.reactWithEmoteStr(context, '❓')
@@ -214,47 +229,146 @@ class JerryCog(CustomCog):
         else:
             message = f'{target}'
 
+        await self.enqueueReminder(context, [message])
+        await self.BOT_UTILS.reactWithEmoteStr(context, '👍🏿')
+
+    async def enqueueReminder(self, context: Any, messages: list[str]):
+        """TODO"""
 
         # calculate delay
         delayToSend = self.extractDelay(context.content)
 
-        if (delayToSend <= 999):
-            await context.reply(message)
+        if (delayToSend <= 0.9):
+            for index, message in enumerate(messages):
+                if (index == 0):
+                    await context.reply(message)
+                else:
+                    await context.channel.send(message)
 
         else:
             # store to be resumable
+            message = MESSAGE_SEPERATOR.join(messages)
             self.DB_HANDLER.executeOneshot(f'''
                 INSERT INTO reminders (message_id, guild_id, channel_id, message, date_time)
                 VALUES ('{context.id}', '{context.guild.id}', '{context.channel.id}', '{message}', {time.time() + delayToSend})
             ''')
 
-            # triggrer reminder
+            # trigger reminder
             asyncio.create_task(self.queueReminder(str(context.id)))
 
     async def queueReminder(self, messageID: str):
         """TODO"""
 
-        pass
+        data = self.DB_HANDLER.executeOneshot(f'''
+            SELECT date_time
+            FROM reminders
+            WHERE message_id = '{messageID}'
+        ''')
 
-    async def triggerReminder(self):
+        if (len(data) == 1):
+            delay = (float)(data[0][0]) - time.time()
+
+            if (delay >= 0):
+                await asyncio.sleep(delay) # wait until time to send
+                asyncio.create_task(self.triggerReminder(messageID))
+            else:
+                await self.triggerReminder(messageID, late=True)
+
+        else:
+            print(f'Error fetching reminder {messageID} from database, when scheduling.')
+
+    async def triggerReminder(self, messageID: str, late: bool = False):
         """TODO"""
 
-        pass
+        data = self.DB_HANDLER.executeOneshot(f'''
+            SELECT message_id, guild_id, channel_id, message
+            FROM reminders
+            WHERE message_id = '{messageID}'
+        ''')
+
+        if (len(data) == 1):
+            guild = self.BOT.get_guild(int(data[0][1]))
+            if (guild is not None):
+                channel: Any = guild.get_channel(int(data[0][2]))
+                if (channel is not None):
+
+                    messages = data[0][3].split(MESSAGE_SEPERATOR) # split into individual messages
+                    for index, message in enumerate(messages):
+                        if (index == 0):
+                            # try to reply for the initial message
+                            try:
+                                initialMessage = await channel.fetch_message(int(data[0][0]))
+                                await initialMessage.reply(message)
+                            except discord.NotFound:
+                                await channel.send(message)
+                        else:
+                            # send subsequent messages individually
+                            await channel.send(message)
+
+                    if (late):
+                        await channel.send('(Sorry for the delay.)')
+
+            # cleanup database
+            self.DB_HANDLER.executeOneshot(f'''
+                DELETE FROM reminders
+                WHERE message_id = '{messageID}'
+            ''')
+        else:
+            print(f'Error fetching reminder {messageID} from database, when sending.')
+
 
     def extractDelay(self, content: str) -> int:
         """Extracts the delay from a reminder command."""
 
-        delay = 0
+        delay: float = 0
 
-        for unit in [('day', 86400), ('hour', 3600), ('min', 60), ('sec', 1)]:
-            temp = re.search(rf'(\d+|an?) {unit[0]}', content)
+        # CALCULATE TIME OF DAY DIRECTLY
+        if (any(word in content for word in ['at'])):
 
+            currentTime = time.localtime() # TODO: use timezones
+            targetTime = {}
+
+            # TIME OF DAY
+            temp = re.search(r'(\d{1,2}):(\d{2})', content)
             if (temp is not None):
-                a = temp.group(1)
+                targetTime['hour'] = int(temp.group(1))
+                targetTime['minute'] = int(temp.group(2))
+            else:
+                # assume now
+                targetTime['hour'] = currentTime.tm_hour
+                targetTime['minute'] =  currentTime.tm_min
 
-                if (a[0] == 'a'):
-                    delay += unit[1]
+            # DATE
+            temp = re.search(r'(\d{1,2})[/\.](\d{1,2})', content)
+            if (temp is not None):
+                targetTime['day'] = int(temp.group(1))
+                targetTime['month'] = int(temp.group(2))
+            else:
+                # DAY THIS WEEK
+                temp = re.search(r'(mon|tue|wed|thu|fri|sat|sun)', content)
+                if (temp is not None):
+                    # TODO
+                    pass
                 else:
-                    delay += int(a) * unit[1]
+                    # assume today
+                    targetTime['day'] = currentTime.tm_mday
+                    targetTime['month'] = currentTime.tm_mon
+
+            newTime = time.mktime((currentTime.tm_year, targetTime['month'], targetTime['day'], targetTime['hour'], targetTime['minute'], 0, 0, 0, 0))
+            delay = newTime - time.time()
+
+        # CALCULATE TIME OF MESSAGE AS A DELAY
+        elif (any(word in content for word in ['in', 'after'])):
+
+            for unit in [('d', 86400), ('h', 3600), ('m', 60), ('s', 1)]:
+                temp = re.search(rf'(\d+|an?)\s*{unit[0]}', content) # number of units, or 'a(n)' for 1
+
+                if (temp is not None):
+                    a = temp.group(1)
+
+                    if (a[0] == 'a'):
+                        delay += unit[1]
+                    else:
+                        delay += int(a) * unit[1]
 
         return delay

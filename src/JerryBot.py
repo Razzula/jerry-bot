@@ -138,9 +138,6 @@ class JerryCoreCog(CustomCog):
             activity=discord.Activity(type=discord.ActivityType.listening, name=activity)
         )
 
-        # REMINDERS
-        # TODO
-
         print('Ready.\n')
 
     @commands.Cog.listener()
@@ -176,7 +173,7 @@ class JerryCoreCog(CustomCog):
             if (name in message):
 
                 ## REMINDERS
-                if ('remind' in message):
+                if any(keyword in message for keyword in ['remind', 'ask', 'tell']):
                     await self.callCommand('JerryCog', JerryCog.setReminder, context, message)
                     return
 
