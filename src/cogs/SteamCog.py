@@ -18,8 +18,8 @@ class SteamCog(CustomCog):
         self.DB_HANDLER: Final[DatabaseHandler] = dbHandler
 
         super().__init__('SteamCog', [
-            ['game',      Emotes.STEAM.value.emote],
-            ['steam `id`',  Emotes.STEAM_BLACK.value.emote],
+            { 'aliases': ['game'], 'short': 'game', 'icon': Emotes.STEAM.value.emote, 'description': 'Select a game to play from your Steam library. If you are in a voice channel, it will select a shared game among all active users.' },
+            { 'aliases': ['steam'], 'short': 'steam `id`', 'icon': Emotes.STEAM_BLACK.value.emote, 'description': 'Set your Steam ID for API access.' },
         ])
 
         self.BOT: Final[commands.Bot] = bot
