@@ -1,13 +1,13 @@
 """TODO ..."""
-from typing import Final
+from typing import Final, Sequence
 from discord.ext import commands
 
 class CustomCog(commands.Cog):
     """TODO"""
 
-    def __init__(self, name: str, helpList: list[list[str]] | None = None):
+    def __init__(self, name: str, helpList: list[dict[str, str | Sequence[str]]] | None = None):
         self.COG_NAME: Final[str] = name
-        self.HELP_LIST: list[list[str]] = helpList if (helpList) else []
+        self.HELP_LIST: list[dict[str, str | Sequence[str]]] = helpList if (helpList) else []
 
         self.setupDatabase()
 

@@ -4,7 +4,7 @@ import os
 import random
 import asyncio
 import json
-from typing import Final, Any
+from typing import Final, Any, Sequence
 import logging
 from dotenv import load_dotenv
 import discord
@@ -78,8 +78,8 @@ class JerryCoreCog(CustomCog):
 
     def __init__(self, bot: commands.Bot, botUtils: BotUtils, botNames: list[str], gifs: dict[str, list[str]]):
         super().__init__('JerryCoreCog', [
-            ['help', '❓'],
-            ['ping, pong', '🏓'],
+            { 'aliases': ['help'], 'short': 'help', 'icon': '❓', 'description': '...literally the command you just used.' },
+            { 'aliases': ['ping', 'pong'], 'short': 'ping, pong', 'icon': '🏓', 'description': 'Just like on the Atari.' },
         ])
 
         self.BOT: Final[commands.Bot] = bot
@@ -90,7 +90,7 @@ class JerryCoreCog(CustomCog):
         self.BOT_ALIASES: Final[list[str]] = botNames
         self.GIFS: Final[dict[str, list[str]]] = gifs
 
-        self.helpList: list[list[str]] = []
+        self.helpList: list[dict[str, str | Sequence[str]]] = []
         self.loadedCogs: dict[str, CustomCog] = {}
 
         with open(os.path.join(STATIC_DATA_PATH, 'fortune.txt'), 'r', encoding='utf-8') as file:
@@ -101,7 +101,7 @@ class JerryCoreCog(CustomCog):
                     wisdoms.append(line)
             self.WISDOMS = wisdoms
 
-    def setHelpList(self, helpList: list[list[str]]):
+    def setHelpList(self, helpList: list[dict[str, str | Sequence[str]]]):
         """TODO"""
 
         self.helpList = helpList
@@ -231,19 +231,50 @@ class JerryCoreCog(CustomCog):
         await context.send('Ping!')
 
     @commands.command(name='help', pass_context=True)
-    async def help(self, context: Any):
+    async def help(self, context: Any, arg: str | None = None):
         """Displays the help menu."""
 
-        embed = discord.Embed(
-            title='What can men do against such reckless hate?', color=discord.Color.red()
-        )
+        if (arg is None): # list commands
+            embed = discord.Embed(
+                title='What can men do against such reckless hate?',
+                color=discord.Color.red()
+            )
 
-        prefix = await self.BOT.get_prefix(context)
-        if (isinstance(prefix, list)):
-            prefix = prefix[0]
+            prefix = await self.BOT.get_prefix(context)
+            if (isinstance(prefix, list)):
+                prefix = prefix[0]
 
-        for field in self.helpList:
-            embed.add_field(name=f'{prefix}{field[0]}', value=field[1]) # TODO: verbosity level
+            for field in self.helpList:
+                embed.add_field(name=f'{prefix}{field.get("short")}', value=field.get('icon'))
+
+            embed.set_footer(text=f'Use `{prefix}help <command>` for more details.')
+
+
+        else: # show specific details for a command
+
+            helpList = None
+            for command in self.helpList:
+                if (arg in command['aliases']):
+                    helpList = command
+
+            if (helpList is not None):
+
+                embed = discord.Embed(
+                    title=f'{arg} {helpList.get("icon")}',
+                    color=discord.Color.red(),
+                )
+
+                embed.add_field(name=helpList['short'], value=helpList['description'])
+
+                if (aliases := helpList.get('aliases')):
+                    if (len(aliases) > 1):
+                        aliases.remove(arg)
+                        aliases = ', '.join(aliases)
+                        embed.set_footer(text=f'Aliases: {aliases}')
+
+            else:
+                await context.send(f'`{arg}` is not a valid command.')
+                return
 
         await context.send(embed=embed)
 

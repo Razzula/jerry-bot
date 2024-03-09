@@ -41,11 +41,11 @@ class JerryCog(CustomCog):
         self.DB_HANDLER: Final[DatabaseHandler] = dbHandler
 
         super().__init__('JerryCog', [
-            ['party',               '🎉'],
-            ['pick `a`,`b`,...',    '❔'],
-            ['roll `n`',            '🎲'],
-            ['bonk `@`',            Emotes.BONK.value.emote],
-            ['summon `@`',          '🎺'],
+            { 'aliases': ['party'], 'short': 'party', 'icon': '🎉', 'description': 'I like to move it, move it 🦝' },
+            { 'aliases': ['pick', 'choose', 'select'], 'short': 'pick `a`,`b`,...', 'icon': '❔', 'description': 'Randomly select a choice from a list of options (or does it just return the first one? I can never remember).' },
+            { 'aliases': ['roll'], 'short': 'roll `n`', 'icon': '🎲', 'description': 'Roll a d`n` die.' },
+            { 'aliases': ['bonk'], 'short': 'bonk `@`', 'icon': Emotes.BONK.value.emote, 'description': 'Punish a user with a bonk, and send them to bonk-jail.' },
+            { 'aliases': ['summon'], 'short': 'summon `@`', 'icon': '🎺', 'description': 'Summon a user (to fulfil their oath!)' },
         ])
 
         self.BOT: Final[commands.Bot] = bot
