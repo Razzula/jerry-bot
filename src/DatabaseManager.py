@@ -50,8 +50,15 @@ class DatabaseManager:
     def getFromCache(self, cog: str, store: str, key: str) -> Any:
         """TODO"""
         if (self.CACHE is not None): # redis may not be connected
-            return json.loads(self.CACHE.get(f'{cog}::{store}:{key}'))
+            temp = self.CACHE.get(f'{cog}::{store}:{key}')
+            if (temp is not None):
+                return json.loads(temp)
         return None
+    
+    def removeFromCache(self, cog: str, store: str, key: str):
+        """TODO"""
+        if (self.CACHE is not None): # redis may not be connected
+            self.CACHE.delete(f'{cog}::{store}:{key}')
 
     def getCursor(self):
         """TODO"""
