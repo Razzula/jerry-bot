@@ -111,12 +111,14 @@ class BotUtils:
             return ', '.join(output)
         return False
 
-    def getGIF(self, gifName: str):
+    def getGIF(self, gifName: str | list[str]):
         """Gets a GIF from the static data folder."""
 
+        if (isinstance(gifName, list)):
+            gifName = random.choice(gifName)
         return f'https://raw.githubusercontent.com/Razzula/jerry-bot/v2.0/data/static/gifs/{gifName}.gif' # TODO: switch to master branch
 
-    async def sendGIF(self, channel: Any, gifName: str):
+    async def sendGIF(self, channel: Any, gifName: str | list[str]):
         """Sends a GIF to the current channel."""
 
         await channel.send(self.getGIF(gifName))
