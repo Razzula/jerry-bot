@@ -8,15 +8,15 @@ from discord import Embed, Color
 from apis.steamAPI import SteamAPI, SteamTags
 
 from BotUtils import BotUtils, Emotes, Emote
-from DatabaseHandler import DatabaseHandler
+from DatabaseManager import DatabaseManager
 from cogs.CogTemplate import CustomCog
 
 class SteamCog(CustomCog):
     """TODO"""
 
-    def __init__(self, bot: commands.Bot, botUtils: BotUtils, dbHandler: DatabaseHandler, steamAPIKey: str):
+    def __init__(self, bot: commands.Bot, botUtils: BotUtils, dbManager: DatabaseManager, steamAPIKey: str):
 
-        self.DB_HANDLER: Final[DatabaseHandler] = dbHandler
+        self.DB_MANAGER: Final[DatabaseManager] = dbManager
 
         super().__init__('SteamCog', [
             { 'aliases': ['game'], 'short': 'game', 'icon': Emotes.STEAM.value.emote, 'description': 'Select a game to play from your Steam library. If you are in a voice channel, it will select a shared game among all active users.' },
@@ -31,7 +31,7 @@ class SteamCog(CustomCog):
     def setupDatabase(self):
         """TODO"""
 
-        cursor = self.DB_HANDLER.getCursor()
+        cursor = self.DB_MANAGER.getCursor()
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS steam_ids (
                 discord_id VARCHAR(18) PRIMARY KEY,
@@ -39,7 +39,7 @@ class SteamCog(CustomCog):
                 username VARCHAR(32)
             )
         ''')
-        self.DB_HANDLER.commit()
+        self.DB_MANAGER.commit()
 
     @commands.command(name='game', pass_context=True)
     async def decideGame(self, context: Any):
@@ -56,16 +56,16 @@ class SteamCog(CustomCog):
                 activeUsers.append(str(user.id))
 
         # get steam ids of users
-        discordIDList = self.DB_HANDLER.arrayToSqlInArgument(activeUsers)
+        discordIDList = self.DB_MANAGER.arrayToSqlInArgument(activeUsers)
 
         # attempt to use cache
-        cachedRes = self.DB_HANDLER.getFromCache('SteamCog', discordIDList)
+        cachedRes = self.DB_MANAGER.getFromCache(self.COG_NAME, 'idlist', discordIDList)
         if (cachedRes is not None):
             # use cached data
-            sharedGameLibrary = json.loads(cachedRes)
+            sharedGameLibrary = cachedRes
         else:
             # fetch data from db
-            res = self.DB_HANDLER.executeOneshot(f'SELECT discord_id, steam_id FROM steam_ids WHERE discord_id IN {discordIDList}')
+            res = self.DB_MANAGER.executeOneshot(f'SELECT discord_id, steam_id FROM steam_ids WHERE discord_id IN {discordIDList}')
 
             if (len(res) < len(activeUsers)):
                 # not all users have a steam id
@@ -77,7 +77,7 @@ class SteamCog(CustomCog):
 
             # cache result
             # TODO: handle errors first (do not cache if error)
-            self.DB_HANDLER.storeInCache('SteamCog', discordIDList, json.dumps(sharedGameLibrary))
+            self.DB_MANAGER.storeInCache(self.COG_NAME, 'idlist', discordIDList, sharedGameLibrary)
 
         # select game
         if (sharedGameLibrary == [None]): # TODO: handle this properly
@@ -166,7 +166,7 @@ class SteamCog(CustomCog):
 
         if (arg is None):  # no ID passed
 
-            res = self.DB_HANDLER.executeOneshot(f"SELECT steam_id FROM steam_ids WHERE discord_id = '{context.author.id}'")
+            res = self.DB_MANAGER.executeOneshot(f"SELECT steam_id FROM steam_ids WHERE discord_id = '{context.author.id}'")
             if (res):
                 embed = self.getUserEmbed(res[0][0])
                 await context.channel.send(embed=embed)
@@ -174,7 +174,7 @@ class SteamCog(CustomCog):
                 await context.channel.send(f'You have not set a Steam ID yet. Use `!steam <your_steam_id>` to resolve this.')
 
         elif (steamID := self.STEAM_API.isValidUser(arg)):
-            self.DB_HANDLER.executeOneshot(f'''
+            self.DB_MANAGER.executeOneshot(f'''
                 INSERT INTO steam_ids (discord_id, steam_id, username) VALUES ('{context.author.id}', '{steamID}', '{context.author.name}')
                 ON CONFLICT (discord_id) DO UPDATE SET steam_id = '{steamID}'
             ''')

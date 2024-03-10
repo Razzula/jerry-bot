@@ -9,7 +9,7 @@ import discord
 from discord.ext import commands
 
 from BotUtils import BotUtils, Emotes, Emote
-from DatabaseHandler import DatabaseHandler
+from DatabaseManager import DatabaseManager
 from cogs.CogTemplate import CustomCog
 
 PERSPECTIVE_CONVERTOR = {
@@ -36,9 +36,9 @@ MESSAGE_SEPERATOR = r'\N'
 class JerryCog(CustomCog):
     """TODO"""
 
-    def __init__(self, bot: commands.Bot, botUtils: BotUtils, dbHandler: DatabaseHandler, gifs: dict[str, list[str]]):
+    def __init__(self, bot: commands.Bot, botUtils: BotUtils, dbManager: DatabaseManager, gifs: dict[str, list[str]]):
 
-        self.DB_HANDLER: Final[DatabaseHandler] = dbHandler
+        self.DB_MANAGER: Final[DatabaseManager] = dbManager
 
         super().__init__('JerryCog', [
             { 'aliases': ['party'], 'short': 'party', 'icon': '🎉', 'description': 'I like to move it, move it 🦝' },
@@ -56,7 +56,7 @@ class JerryCog(CustomCog):
     def setupDatabase(self):
         """TODO"""
 
-        cursor = self.DB_HANDLER.getCursor()
+        cursor = self.DB_MANAGER.getCursor()
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS reminders (
                 guild_id VARCHAR(32),
@@ -66,19 +66,65 @@ class JerryCog(CustomCog):
                 date_time FLOAT
             )
         ''')
-        self.DB_HANDLER.commit()
+        self.DB_MANAGER.commit()
 
     @commands.Cog.listener()
     async def on_ready(self):
         """Initializes the bot when it is ready."""
 
         # enqueue all reminders # TODO optimise this to minimise active threads
-        data = self.DB_HANDLER.executeOneshot('''
+        data = self.DB_MANAGER.executeOneshot('''
             SELECT message_id FROM reminders
         ''')
 
         for reminder in data:
             asyncio.create_task(self.queueReminder(reminder[0]))
+
+    @commands.Cog.listener()
+    async def on_message(self, context: Any):
+        """Reacts to messages sent to the bot."""
+
+        message: str = context.content.lower()  # removes case sensitivity
+        if (context.author == self.BOT.user):
+            return
+
+        # extract mentions
+        userMentions = self.BOT_UTILS.extractMentionsFromMessage(message).get('users')
+
+        # PRESENCE WAITLIST
+        for userID in userMentions:
+
+            user = context.guild.get_member(int(userID))
+            if (user is None):
+                continue
+
+            # enqueue to presence waitlist
+            if (user.status.name in ('offline', 'idle')): # only queue if user is not online
+                value = {
+                    'guild': context.guild.id,
+                    'channel': context.channel.id,
+                    'message': context.id,
+                }
+
+                self.DB_MANAGER.storeInCache(self.COG_NAME, 'presenceWaitlist', userID, value, timeUntilExpire=120)
+
+    @commands.Cog.listener()
+    async def on_presence_update(self, _userBefore, userAfter):
+
+        if (userAfter.status.name in ['online', 'dnd']): # user has come online
+            temp = self.DB_MANAGER.getFromCache(self.COG_NAME, 'presenceWaitlist', str(userAfter.id))
+
+            if (temp is not None): # user has a reminder queued
+                for prompt in temp:
+                    channel = self.BOT.get_guild(prompt['guild']).get_channel(prompt['channel'])
+                    if (channel is not None):
+                        message = await channel.fetch_message(prompt['message'])
+                        if (message is not None):
+                            try:
+                                await message.reply(self.BOT_UTILS.getGIF('HeIsHere'))
+                            except discord.NotFound:
+                                await channel.send(self.BOT_UTILS.getGIF('HeIsHere'))
+                        
 
     @commands.command(name='party')
     async def dance(self, context: Any):
@@ -248,7 +294,7 @@ class JerryCog(CustomCog):
         else:
             # store to be resumable
             message = MESSAGE_SEPERATOR.join(messages)
-            self.DB_HANDLER.executeOneshot(f'''
+            self.DB_MANAGER.executeOneshot(f'''
                 INSERT INTO reminders (message_id, guild_id, channel_id, message, date_time)
                 VALUES ('{context.id}', '{context.guild.id}', '{context.channel.id}', '{message}', {time.time() + delayToSend})
             ''')
@@ -259,7 +305,7 @@ class JerryCog(CustomCog):
     async def queueReminder(self, messageID: str):
         """TODO"""
 
-        data = self.DB_HANDLER.executeOneshot(f'''
+        data = self.DB_MANAGER.executeOneshot(f'''
             SELECT date_time
             FROM reminders
             WHERE message_id = '{messageID}'
@@ -280,7 +326,7 @@ class JerryCog(CustomCog):
     async def triggerReminder(self, messageID: str, late: bool = False):
         """TODO"""
 
-        data = self.DB_HANDLER.executeOneshot(f'''
+        data = self.DB_MANAGER.executeOneshot(f'''
             SELECT message_id, guild_id, channel_id, message
             FROM reminders
             WHERE message_id = '{messageID}'
@@ -309,7 +355,7 @@ class JerryCog(CustomCog):
                         await channel.send('(Sorry for the delay.)')
 
             # cleanup database
-            self.DB_HANDLER.executeOneshot(f'''
+            self.DB_MANAGER.executeOneshot(f'''
                 DELETE FROM reminders
                 WHERE message_id = '{messageID}'
             ''')

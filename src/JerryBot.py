@@ -11,7 +11,7 @@ import discord
 from discord.ext import commands
 
 from BotUtils import BotUtils, Emotes
-from DatabaseHandler import DatabaseHandler
+from DatabaseManager import DatabaseManager
 from apis.bibleAPI import BibleAPI
 
 from cogs.CogTemplate import CustomCog
@@ -34,7 +34,7 @@ class JerryBot:
         with open(os.path.join(STATIC_DATA_PATH, 'gifs.json'), 'r', encoding='utf-8') as file:
             self.GIFS = json.load(file)
 
-        self.DB_HANDLER = DatabaseHandler(os.path.join(DYNAMIC_DATA_PATH, 'global.db'))
+        self.DB_MANAGER = DatabaseManager(os.path.join(DYNAMIC_DATA_PATH, 'global.db'))
 
         self.BOT_UTILS = BotUtils(STATIC_DATA_PATH, DYNAMIC_DATA_PATH)
 
@@ -42,10 +42,10 @@ class JerryBot:
         self.BOT = commands.Bot(intents=intents, command_prefix='!', help_command=None, case_insensitive=True, strip_after_prefix=True)
 
         # Cogs
-        self.JerryCoreCog = JerryCoreCog(self.BOT, self.BOT_UTILS, self.BOT_ALIASES, self.GIFS)
+        self.JerryCoreCog = JerryCoreCog(self.BOT, self.BOT_UTILS, self.DB_MANAGER, self.BOT_ALIASES, self.GIFS)
         asyncio.run(self.loadCogs([
-            JerryCog(self.BOT, self.BOT_UTILS, self.DB_HANDLER, self.GIFS),
-            SteamCog(self.BOT, self.BOT_UTILS, self.DB_HANDLER, os.environ.get("STEAM_API_KEY")),
+            JerryCog(self.BOT, self.BOT_UTILS, self.DB_MANAGER, self.GIFS),
+            SteamCog(self.BOT, self.BOT_UTILS, self.DB_MANAGER, os.environ.get("STEAM_API_KEY")),
         ]))
 
 
@@ -76,7 +76,10 @@ class JerryBot:
 class JerryCoreCog(CustomCog):
     """TODO"""
 
-    def __init__(self, bot: commands.Bot, botUtils: BotUtils, botNames: list[str], gifs: dict[str, list[str]]):
+    def __init__(self, bot: commands.Bot, botUtils: BotUtils, dbManager: DatabaseManager, botNames: list[str], gifs: dict[str, list[str]]):
+        
+        self.DB_MANAGER: Final[DatabaseManager] = dbManager
+        
         super().__init__('JerryCoreCog', [
             { 'aliases': ['help'], 'short': 'help', 'icon': '❓', 'description': '...literally the command you just used.' },
             { 'aliases': ['ping', 'pong'], 'short': 'ping, pong', 'icon': '🏓', 'description': 'Just like on the Atari.' },
