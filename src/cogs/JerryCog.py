@@ -1,5 +1,6 @@
 # pylint: disable=fixme, line-too-long, invalid-name, superfluous-parens, trailing-whitespace, arguments-differ, import-not-found
 """TODO ..."""
+import datetime
 import random
 import re
 import time
@@ -7,6 +8,7 @@ import asyncio
 from typing import Final, Any
 import discord
 from discord.ext import commands
+import pytz
 
 from BotUtils import BotUtils, Emotes, Emote
 from DatabaseManager import DatabaseManager
@@ -106,7 +108,8 @@ class JerryCog(CustomCog):
                     'message': context.id,
                 }
 
-                self.DB_MANAGER.storeInCache(self.COG_NAME, 'presenceWaitlist', userID, value, timeUntilExpire=120)
+                self.DB_MANAGER.storeInCache(self.COG_NAME, 'presenceWaitlist', userID, value, timeUntilExpire=3600) # 1 hour
+                await self.BOT_UTILS.reactWithEmoteStr(context, '👀')
 
     @commands.Cog.listener()
     async def on_presence_update(self, _userBefore, userAfter):
@@ -118,12 +121,24 @@ class JerryCog(CustomCog):
                 for prompt in temp:
                     channel = self.BOT.get_guild(prompt['guild']).get_channel(prompt['channel'])
                     if (channel is not None):
+
                         message = await channel.fetch_message(prompt['message'])
                         if (message is not None):
+                            timeTaken = (datetime.datetime.now(message.created_at.tzinfo) - message.created_at).total_seconds()
+
+                            if (timeTaken < 120): # 2 minutes
+                                gifName = 'HeIsHere'
+                            elif (timeTaken > 3600): # 1 hour
+                                gifName = "You'reLate"
+                            else:
+                                continue
+
                             try:
-                                await message.reply(self.BOT_UTILS.getGIF('HeIsHere'))
+                                await message.reply(self.BOT_UTILS.getGIF(gifName))
                             except discord.NotFound:
-                                await channel.send(self.BOT_UTILS.getGIF('HeIsHere'))
+                                await channel.send(self.BOT_UTILS.getGIF(gifName))
+
+                self.DB_MANAGER.removeFromCache(self.COG_NAME, 'presenceWaitlist', str(userAfter.id))
                         
 
     @commands.command(name='party')
