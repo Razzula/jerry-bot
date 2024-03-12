@@ -116,11 +116,11 @@ class JerryCoreCog(CustomCog):
 
         self.loadedCogs = loadedCogs
 
-    async def callCommand(self, cogName: str, command: Any, context: Any, arg: str):
+    async def callCommand(self, cogName: str, command: Any, context: Any, *args):
         """Calls a command from a cog."""
 
         if ((cog := self.loadedCogs.get(cogName)) is not None):
-            await command(cog, context, arg)
+            await command(cog, context, args)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -178,9 +178,10 @@ class JerryCoreCog(CustomCog):
             if (name in message):
 
                 ## REMINDERS
-                if any(keyword in message for keyword in ['remind', 'ask', 'tell']):
-                    await self.callCommand('JerryCog', JerryCog.setReminder, context, message)
-                    return
+                for keyword in ['remind', 'ask', 'tell']:
+                    if (keyword in message):
+                        await self.callCommand('JerryCog', JerryCog.setReminder, context, keyword)
+                        return
 
                 ## BONK
                 if ('bonk' in message):
