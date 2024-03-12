@@ -276,8 +276,11 @@ class SteamCog(CustomCog):
                     })
                     break
 
+        numberOfAchievements = currentGame.get('achievements').get('total')
         progressBar = self.BOT_UTILS.getProgressBar(
-            len(missingAchievements), currentGame.get('achievements').get('total'), length=10
+            numberOfAchievements - len(missingAchievements),
+            numberOfAchievements,
+            length=10
         )
 
         # EMBED
