@@ -166,3 +166,13 @@ class BotUtils:
             pass
 
         return users
+    
+    def getProgressBar(self, value: float, maxValue: float, length: int = 20) -> str:
+        """Generates an ASCII progress bar."""
+
+        fill: str = '█'
+        empty: str = '░'
+
+        percentage = int(value / maxValue * 100)
+        progress = int(length * value / maxValue)
+        return f'[{fill * progress}{empty * (length - progress)}] {percentage}%'
