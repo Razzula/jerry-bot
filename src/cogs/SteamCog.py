@@ -11,6 +11,8 @@ from BotUtils import BotUtils, Emotes, Emote
 from DatabaseManager import DatabaseManager
 from cogs.CogTemplate import CustomCog
 
+RETRY_EMOJI: Final[str] = '🔁'
+
 class SteamCog(CustomCog):
     """TODO"""
 
@@ -41,8 +43,29 @@ class SteamCog(CustomCog):
         ''')
         self.DB_MANAGER.commit()
 
+    @commands.Cog.listener()
+    async def on_reaction_add(self, reaction, user):
+        if (user.id == self.BOT.user.id): # ignore self
+            return
+        
+        if (reaction.emoji == RETRY_EMOJI):
+            # get embed data
+            embedData = self.DB_MANAGER.getFromCache(self.COG_NAME, 'activeEmbeds', str(reaction.message.id))
+            if (embedData is not None):
+                # get new game
+                embedData = embedData[0]
+
+                votePercentage = (reaction.count - 1) / len(embedData['players'])
+                if (votePercentage >= 0.5):
+
+                    gameEmbed = self.getGameEmbed(embedData['library'], multiplayer=(len(embedData['players']) > 1))
+
+                    await reaction.message.clear_reactions()
+                    await reaction.message.edit(embed=gameEmbed)
+                    await reaction.message.add_reaction(RETRY_EMOJI)
+
     @commands.command(name='game', pass_context=True)
-    async def decideGame(self, context: Any):
+    async def decideGame(self, context: Any, _message: str | None = None):
         """TODO"""
 
         # get users in vc
@@ -90,8 +113,15 @@ class SteamCog(CustomCog):
             gameEmbed = self.getGameEmbed(
                 sharedGameLibrary, multiplayer=(len(activeUsers) > 1) # game must be multi-player if multiple users
             )
-            await context.channel.send(embed=gameEmbed)
-            # TODO: handle voting
+            res = await context.channel.send(embed=gameEmbed)
+            
+            # handle voting
+            if (res is not None):
+                await res.add_reaction(RETRY_EMOJI)
+            self.DB_MANAGER.storeInCache(self.COG_NAME, 'activeEmbeds', str(res.id), {
+                'library': sharedGameLibrary,
+                'players': activeUsers,
+            }, timeUntilExpire=600) # 10 minutes
 
     def getGameEmbed(self, gamesList: list[Any], multiplayer: bool) -> Embed:
         """TODO"""
