@@ -245,8 +245,6 @@ class SteamCog(CustomCog):
         # get current game
         userData = self.STEAM_API.getSteamProfile(res[0][0])
         activity = userData.get('gameid')
-        # activity = '1086940' # BG3
-        activity = '976730' # MCC
         if (activity is None):
             await context.channel.send(f"You don't seem to be currently playing a game.")
             return
