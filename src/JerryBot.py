@@ -17,6 +17,7 @@ from apis.bibleAPI import BibleAPI
 from cogs.CogTemplate import CustomCog
 from cogs.JerryCog import JerryCog
 from cogs.SteamCog import SteamCog
+from cogs.TagCog import TagCog
 
 load_dotenv('token.env')
 
@@ -46,6 +47,7 @@ class JerryBot:
         asyncio.run(self.loadCogs([
             JerryCog(self.BOT, self.BOT_UTILS, self.DB_MANAGER, self.GIFS),
             SteamCog(self.BOT, self.BOT_UTILS, self.DB_MANAGER, os.environ.get("STEAM_API_KEY")),
+            TagCog(self.BOT, self.BOT_UTILS, self.GIFS),
         ]))
 
 
