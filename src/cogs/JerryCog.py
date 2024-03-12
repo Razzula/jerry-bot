@@ -263,21 +263,23 @@ class JerryCog(CustomCog):
     async def setReminder(self, context: Any, *args):
         """TODO"""
 
+        trigger = args[0][0] if (len(args) > 0) else 'remind'
+
         # get message
         content = context.content + ' '
-        needsName = re.search(r'remind (me|.*?)[ .]', content)
+        reg = re.search(rf'{trigger} (me|.*?)[ .]', content)
 
-        if (needsName is None):
-            await context.channel.send('Remind you of what?')
+        if (reg is None):
+            await context.channel.send(f'{trigger.title()} you of what?')
             return
 
-        target = needsName.group(1)
+        target = reg.group(1)
         if (target in ['me', None]):
             target = context.author.mention
 
-        needsName = re.search(r'remind (me|.*?) .*?(?:to|that|about|of) (.*)', content)
-        if (needsName is not None):
-            temp = needsName.group(2).split(' ')
+        reg = re.search(rf'{trigger} (me|.*?) .*?(?:to|that|about|of) (.*)', content)
+        if (reg is not None):
+            temp = reg.group(2).split(' ')
 
             message = f'{target}, '
             for word in temp:
