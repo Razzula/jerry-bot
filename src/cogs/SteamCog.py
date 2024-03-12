@@ -130,7 +130,7 @@ class SteamCog(CustomCog):
 
         # generate embed
         embed = Embed(
-            title=selectedGame.get('name'),
+            title=f'{Emotes.STEAM.value.emote} {selectedGame.get("name")}',
             color=Color.dark_blue(),
             description=selectedGame.get('description'),
         )
@@ -214,3 +214,75 @@ class SteamCog(CustomCog):
         else:
             await self.BOT_UTILS.reactWithEmote(context, Emotes.EKKY_DISAPPROVES.value)
             await context.channel.send(f"`{arg}` is not a valid Steam ID.")
+
+    @commands.command(name='hunt', pass_context=True, aliases=['achievement'])
+    async def decideAchievement(self, context: Any):
+        """TODO"""
+        
+        # get steam id
+        res = self.DB_MANAGER.executeOneshot(f"SELECT steam_id FROM steam_ids WHERE discord_id = '{context.author.id}'")
+        if (res is None):
+            await context.channel.send(f'You have not set a Steam ID yet. Use `!steam <your_steam_id>` to resolve this.')
+            return
+        
+        # get current game
+        userData = self.STEAM_API.getSteamProfile(res[0][0])
+        activity = userData.get('gameid')
+        # activity = '1086940' # BG3
+        if (activity is None):
+            await context.channel.send(f"You don't seem to be currently playing a game.")
+            return
+        
+        # get data
+        currentGame = self.STEAM_API.getGame(activity)
+        currentGameAchievements = self.STEAM_API.getAchievementStatsOfGame(activity)
+        missingAchievements = self.STEAM_API.getMissingAchievements(res[0][0], activity)
+
+        missingAchievementsSorted = []
+
+        for achievement in currentGameAchievements: # these are sorted in descnding order of commonality
+            # sort missing achievements to match the order of the current game's achievements
+            for missingAchievement in missingAchievements:
+                if (missingAchievement.get('apiname') == achievement.get('name')):
+                    missingAchievementsSorted.append({
+                        'name': missingAchievement.get('name'),
+                        'description': missingAchievement.get('description'),
+                        'percentage': int(achievement.get('percent')),
+                    })
+                    break
+
+        progressBar = self.BOT_UTILS.getProgressBar(
+            len(missingAchievements), currentGame.get('achievements').get('total'), length=10
+        )
+        # TODO: ignore hidden achievements
+
+        embed = Embed(
+            title=f'{Emotes.STEAM.value.emote} {currentGame.get("name")} {progressBar}',
+            color=Color.dark_blue(),
+            description=f'There are {len(currentGameAchievements)} achievements in this game. You are missing {len(missingAchievements)}. \nHere are some of the most common achievements you are missing: ',
+        )
+        embed.url = f'https://steamcommunity.com/stats/{currentGame["steam_appid"]}/achievements'
+        embed.set_thumbnail(url=currentGame['header_image'])
+        # embed.set_footer(text=f'{len(missingAchievements)} missing achievements')
+        embed.timestamp = context.message.created_at
+        embed.set_author(name=userData.get('personaname'), icon_url=userData.get('avatarfull'))
+
+        count = 0
+        i = 0
+        desiredCount = min(3, len(missingAchievementsSorted))
+
+        while (count < desiredCount and i < len(missingAchievementsSorted)):
+            achievement = missingAchievementsSorted[i]
+            if (achievement['description'] != ''):
+                embed.add_field(
+                    name=f'🏆 {achievement["name"]} ({achievement["percentage"]}%)',
+                    value=achievement['description'],
+                    inline=False
+                )
+                count += 1
+            i += 1
+
+        if (count < desiredCount):
+            pass # TODO: display secret achievements if needed
+
+        await context.channel.send(embed=embed)

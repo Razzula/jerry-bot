@@ -131,15 +131,7 @@ class SteamAPI:
             appID = random.choice(gamesList)
 
             # GET App Data
-            response = self.get(
-                f'https://store.steampowered.com/api/appdetails?appids={appID}'
-            )
-            if (response.status_code == 404):
-                # not found; error with ID
-                localGamesList.remove(appID)
-                continue
-
-            result = response.json().get(str(appID)).get('data')
+            result = self.getGame(appID)
 
             if (not requireMultiplayer):
                 break
@@ -203,3 +195,48 @@ class SteamAPI:
             return None
 
         return results[0]
+    
+    def getGame(self, appID: str) -> Any | None:
+        """Get game data from the Steam API."""
+
+        response = self.get(
+            f'https://store.steampowered.com/api/appdetails?appids={appID}'
+        )
+        if (response.status_code == 404):
+            return None
+
+        return response.json().get(str(appID)).get('data')
+    
+    def getMissingAchievements(self, steamID: str, appID: str) -> list[dict[str, Any]]:
+        """Get missing achievements for a game."""
+
+        response = self.get(
+            'https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/?key='
+            + self.API_KEY
+            + '&steamid='
+            + steamID
+            + '&appid='
+            + appID
+            + '&l=en'
+            + '&format=json'
+        )
+        if (response.status_code == 404):
+            return []
+
+        results = response.json().get('playerstats').get('achievements')
+        if (results is None):
+            return []
+        return [achievement for achievement in results if not achievement.get('achieved')]
+
+    def getAchievementStatsOfGame(self, appID: str) -> dict[str, Any]:
+        """Get achievement stats of a game."""
+
+        response = self.get(
+            'https://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v2/?gameid='
+            + appID
+            + '&format=json'
+        )
+        if (response.status_code == 404):
+            return {}
+
+        return response.json().get('achievementpercentages').get('achievements')
