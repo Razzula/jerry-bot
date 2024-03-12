@@ -191,6 +191,10 @@ class JerryCoreCog(CustomCog):
                     return
 
                 ## DECIDE STEAM GAME
+                if (any(keyword in message for keyword in ['choose', 'decide', 'pick' 'which', 'what'])):
+                    if ('game' in message):
+                        await self.callCommand('SteamCog', SteamCog.decideGame, context, message)
+                        return
 
                 ## WORDS OF WISDOM
                 if ('wis' in message):
