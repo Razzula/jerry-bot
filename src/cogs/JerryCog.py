@@ -251,11 +251,17 @@ class JerryCog(CustomCog):
 
             # TODO: subtle
 
-            await self.enqueueReminder(context, [
+            content = None
+            try:
+                content = context.content
+            except:
+                content = context.message.content
+
+            await self.BOT_UTILS.reactWithEmoteStr(context, '👍🏿')
+            await self.enqueueReminder(context, content, [
                 targets,
                 self.BOT_UTILS.getGIF(random.choice(self.GIFS['summons']))
             ])
-            await self.BOT_UTILS.reactWithEmoteStr(context, '👍🏿')
 
         else:  # no user specified
             await self.BOT_UTILS.reactWithEmoteStr(context, '❓')
@@ -263,7 +269,7 @@ class JerryCog(CustomCog):
     async def setReminder(self, context: Any, *args):
         """TODO"""
 
-        trigger = args[0][0] if (len(args) > 0) else 'remind'
+        trigger = args[0] if (len(args) > 0) else 'remind'
 
         # get message
         content = context.content + ' '
@@ -292,14 +298,14 @@ class JerryCog(CustomCog):
         else:
             message = f'{target}'
 
-        await self.enqueueReminder(context, [message])
+        await self.enqueueReminder(context, content, [message])
         await self.BOT_UTILS.reactWithEmoteStr(context, '👍🏿')
 
-    async def enqueueReminder(self, context: Any, messages: list[str]):
+    async def enqueueReminder(self, context: Any, message: str, messages: list[str]):
         """TODO"""
 
         # calculate delay
-        delayToSend = self.extractDelay(context.content)
+        delayToSend = self.extractDelay(message)
 
         if (delayToSend <= 0.9):
             for index, message in enumerate(messages):
