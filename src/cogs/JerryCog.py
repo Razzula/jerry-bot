@@ -138,8 +138,7 @@ class JerryCog(CustomCog):
                             except discord.NotFound:
                                 await channel.send(self.BOT_UTILS.getGIF(gifName))
 
-                self.DB_MANAGER.removeFromCache(self.COG_NAME, 'presenceWaitlist', str(userAfter.id))
-                        
+                self.DB_MANAGER.removeFromCache(self.COG_NAME, 'presenceWaitlist', str(userAfter.id))                
 
     @commands.command(name='party')
     async def dance(self, context: Any):
