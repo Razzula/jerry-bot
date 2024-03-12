@@ -71,7 +71,7 @@ class SteamCog(CustomCog):
                 votePercentage = (reaction.count - 1) / len(embedData['players'])
                 if (votePercentage >= 0.5):
 
-                    gameEmbed = self.getGameEmbed(embedData['library'], multiplayer=(len(embedData['players']) > 1))
+                    gameEmbed = self.getGameEmbed(embedData['library'], reaction.message, multiplayer=(len(embedData['players']) > 1))
 
                     await reaction.message.clear_reactions()
                     await reaction.message.edit(embed=gameEmbed)
@@ -124,9 +124,8 @@ class SteamCog(CustomCog):
 
         else:
             gameEmbed = self.getGameEmbed(
-                sharedGameLibrary, multiplayer=(len(activeUsers) > 1) # game must be multi-player if multiple users
+                sharedGameLibrary, context, multiplayer=(len(activeUsers) > 1) # game must be multi-player if multiple users
             )
-            gameEmbed.set_footer(text=f'Vote to select a new game with {RETRY_EMOJI}')
 
             res = await context.channel.send(embed=gameEmbed)
             
@@ -138,7 +137,7 @@ class SteamCog(CustomCog):
                 'players': activeUsers,
             }, timeUntilExpire=600) # 10 minutes
 
-    def getGameEmbed(self, gamesList: list[Any], multiplayer: bool) -> Embed:
+    def getGameEmbed(self, gamesList: list[Any], context: Any, multiplayer: bool) -> Embed:
         """TODO"""
         # select game
         selectedGame = self.STEAM_API.selectGame(gamesList, requireMultiplayer=multiplayer)
@@ -168,6 +167,12 @@ class SteamCog(CustomCog):
             else:
                 coopIcon = '❌'
             embed.add_field(name='Cooperative', value=coopIcon if (coopIcon != '') else '✅')
+
+            embed.set_footer(text=f'Vote to select a new game with {RETRY_EMOJI}')
+
+        else:
+            embed.set_author(name=context.author.display_name, icon_url=context.author.avatar)
+            embed.set_footer(text='Go in a voice channel with friends to select a game together.')
 
         # Controller Support
         controllerIcon = None
