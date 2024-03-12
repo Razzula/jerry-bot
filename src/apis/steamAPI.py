@@ -207,8 +207,8 @@ class SteamAPI:
 
         return response.json().get(str(appID)).get('data')
     
-    def getMissingAchievements(self, steamID: str, appID: str) -> list[dict[str, Any]]:
-        """Get missing achievements for a game."""
+    def getPlayerAchievementsForGame(self, steamID: str, appID: str) -> dict[str, Any]:
+        """Get player achievements for a game."""
 
         response = self.get(
             'https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/?key='
@@ -221,9 +221,14 @@ class SteamAPI:
             + '&format=json'
         )
         if (response.status_code == 404):
-            return []
+            return {}
 
-        results = response.json().get('playerstats').get('achievements')
+        return response.json().get('playerstats').get('achievements')
+    
+    def getMissingAchievements(self, steamID: str, appID: str) -> list[dict[str, Any]]:
+        """Get missing achievements for a game."""
+
+        results = self.getPlayerAchievementsForGame(steamID, appID)
         if (results is None):
             return []
         return [achievement for achievement in results if not achievement.get('achieved')]
