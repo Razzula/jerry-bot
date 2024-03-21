@@ -1,8 +1,7 @@
 # pylint: disable=fixme, line-too-long, invalid-name, superfluous-parens, trailing-whitespace, arguments-differ
-"""TODO ..."""
+"""Discord bot that responds to messages and commands."""
 import os
 import random
-import asyncio
 import json
 from typing import Final, Any, Sequence
 import logging
@@ -25,12 +24,12 @@ DYNAMIC_DATA_PATH: Final[str] = 'data/dynamic/'
 STATIC_DATA_PATH: Final[str] = 'data/static/'
 
 class JerryBot:
-    """TODO"""
+    """Main class for the bot."""
 
     BOT_ALIASES = ['jerry', 'jezza', 'jeyry']
 
     def __init__(self):
-        """TODO"""
+        """Constructor for the bot."""
 
         with open(os.path.join(STATIC_DATA_PATH, 'gifs.json'), 'r', encoding='utf-8') as file:
             self.GIFS = json.load(file)
@@ -44,21 +43,28 @@ class JerryBot:
 
         # Cogs
         self.JerryCoreCog = JerryCoreCog(self.BOT, self.BOT_UTILS, self.DB_MANAGER, self.BOT_ALIASES, self.GIFS)
-        asyncio.run(self.loadCogs([
+        self.cogs = [
             JerryCog(self.BOT, self.BOT_UTILS, self.DB_MANAGER, self.GIFS),
             SteamCog(self.BOT, self.BOT_UTILS, self.DB_MANAGER, os.environ.get("STEAM_API_KEY")),
             TagCog(self.BOT, self.BOT_UTILS, self.GIFS),
-        ]))
+        ]
 
+    @classmethod
+    async def create(cls):
+        """Asynchronously creates a bot instance (supports loading cogs)."""
 
-    async def loadCogs(self, additionalCogs: list[Any] | None = None):
-        """TODO"""
+        bot = cls()
+        await bot.loadCogs()
+        return bot
+
+    async def loadCogs(self):
+        """Loads the cogs defined in the constructor."""
         helpList = self.JerryCoreCog.getHelpList()
 
         loadedCogs: dict[str, CustomCog] = {}
 
-        if (additionalCogs):
-            for cog in additionalCogs:
+        if (self.cogs):
+            for cog in self.cogs:
                 helpList.extend(cog.getHelpList())
                 await self.BOT.add_cog(cog)
 
@@ -69,19 +75,23 @@ class JerryBot:
 
         await self.BOT.add_cog(self.JerryCoreCog)
 
-    def run(self, verbosity: int):
-        """TODO"""
+    async def run(self, TOKEN, verbosity: int = logging.INFO):
+        """Asynchronously runs the bot."""
 
-        self.BOT.run(TOKEN, log_level=verbosity)
+        await self.BOT.start(TOKEN, reconnect=True)
 
 
 class JerryCoreCog(CustomCog):
-    """TODO"""
+    """
+    Core cog for the bot.
+
+    Provides basic functionality such as help, ping, and pong.
+    """
 
     def __init__(self, bot: commands.Bot, botUtils: BotUtils, dbManager: DatabaseManager, botNames: list[str], gifs: dict[str, list[str]]):
-        
+
         self.DB_MANAGER: Final[DatabaseManager] = dbManager
-        
+
         super().__init__('JerryCoreCog', [
             { 'aliases': ['help'], 'short': 'help', 'icon': '❓', 'description': '...literally the command you just used.' },
             { 'aliases': ['ping', 'pong'], 'short': 'ping, pong', 'icon': '🏓', 'description': 'Just like on the Atari.' },
@@ -107,12 +117,12 @@ class JerryCoreCog(CustomCog):
             self.WISDOMS = wisdoms
 
     def setHelpList(self, helpList: list[dict[str, str | Sequence[str]]]):
-        """TODO"""
+        """HelpList setter."""
 
         self.helpList = helpList
 
     def setLoadedCogs(self, loadedCogs: dict[str, CustomCog]):
-        """TODO"""
+        """LoadedCogs setter."""
 
         self.loadedCogs = loadedCogs
 
@@ -161,8 +171,6 @@ class JerryCoreCog(CustomCog):
                 if (prompt in message):
                     await self.BOT_UTILS.reactWithEmote(context, reaction.value)
                     break
-
-        # TAG
 
         # BIBLE REFERENCES
         references: list[list[str]] | None = self.BIBLE_API.getBibleReferences(message)
@@ -225,10 +233,6 @@ class JerryCoreCog(CustomCog):
                         await self.BOT_UTILS.sendGIF(context.channel, response[1])
                         return
 
-        # REGURGITATE GITHUB WEBHOOKS
-
-        # await self.BOT.process_commands(context)
-
     @commands.command(name='ping')
     async def ping(self, context: Any):
         """Pings the bot."""
@@ -237,7 +241,7 @@ class JerryCoreCog(CustomCog):
 
     @commands.command(name='pong')
     async def pong(self, context: Any):
-        """Pings the bot. (Alternate)"""
+        """Pings the bot. (Alternate)."""
 
         await context.send('Ping!')
 
@@ -287,10 +291,3 @@ class JerryCoreCog(CustomCog):
                 return
 
         await context.send(embed=embed)
-
-
-if ((TOKEN := os.environ.get('DISCORD_BOT_TOKEN')) is not None):
-    BOT = JerryBot()
-    BOT.run(logging.INFO)
-else:
-    print('Error: No token found')

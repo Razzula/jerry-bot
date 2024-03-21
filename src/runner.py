@@ -1,20 +1,11 @@
+# pylint: disable=fixme, line-too-long, invalid-name, superfluous-parens, trailing-whitespace, arguments-differ
+"""Main module to run the FastAPI server."""
 import os
-import subprocess
-from flask import Flask, request, jsonify
 
-app = Flask(__name__)
+import dotenv
+import uvicorn
 
-@app.route('/webhook', methods=['POST'])
-def webhook():
-    """TODO"""
+dotenv.load_dotenv('token.env')
 
-    payload = request.json
-    if payload['action'] == 'push':
-        # Pull updates from the repository
-        subprocess.run(['run.sh'], check=True)
-        os._exit(0)
-    else:
-        return jsonify({'message': 'Unsupported action'})
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
+if (__name__ == "__main__"):
+    uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=os.environ.get('DEBUG'))
