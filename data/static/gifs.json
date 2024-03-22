@@ -162,7 +162,8 @@
     "bonks" : [
         "BonkMega",
         "BonkGuillotine",
-        "BonkYoshi"
+        "BonkYoshi",
+        "BonkPenguins"
     ],
     "shames": [
         "CaptainAmericaSitDown",
