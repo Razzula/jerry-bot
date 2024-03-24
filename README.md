@@ -15,5 +15,5 @@
 - Use External Emojis
 
 ### Notes
-- `token.env` requires the Discord bot's token as `DISCORD_BOT_TOKEN`, and the Steam API key as `STEAM_API_KEY`
+- `tokens.env` requires the Discord bot's token as `DISCORD_BOT_TOKEN`, and the Steam API key as `STEAM_API_KEY`
 - `steamIDs.txt` can be populated using `!steam <id>`

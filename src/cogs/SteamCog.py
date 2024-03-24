@@ -243,7 +243,7 @@ class SteamCog(CustomCog):
         # STEAM API
         # get steam id
         res = self.DB_MANAGER.executeOneshot(f"SELECT steam_id FROM steam_ids WHERE discord_id = '{context.author.id}'")
-        if (res is None):
+        if (res is None or len(res) == 0):
             await context.channel.send(f'You have not set a Steam ID yet. Use `!steam <your_steam_id>` to resolve this.')
             return
         

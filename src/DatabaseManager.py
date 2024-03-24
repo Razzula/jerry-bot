@@ -1,20 +1,32 @@
 # pylint: disable=fixme, line-too-long, invalid-name, superfluous-parens
 """TODO"""
 import json
-from typing import Any
+import os
 import platform
+from typing import Any
 import sqlite3
-import redis
+
+from redis import Redis, StrictRedis
 
 class DatabaseManager:
     """TODO"""
 
     def __init__(self, dbPath: str):
+
+        if (not dbPath.endswith('.db')):
+            raise ValueError('Database path must end with .db extension.')
+        
+        # create the database file if it does not exist
+        if (not os.path.exists(os.path.dirname(dbPath))):
+            os.makedirs(os.path.dirname(dbPath))
+        if (not os.path.exists(dbPath)):
+            open(dbPath, 'w').close()
+
         self.DB_CONNECTION = sqlite3.connect(dbPath)
         self.TEMP_DB_CONNECTION = sqlite3.connect(':memory:')
 
         if (platform.system() == 'Linux'):
-            self.CACHE = redis.StrictRedis(host='localhost', port=6379, db=0)
+            self.CACHE: Redis | None = StrictRedis(host='localhost', port=6379, db=0)
         else:
             self.CACHE = None # redis will not be established on Windows, which may be used for debugging, therefore skip caching
 
