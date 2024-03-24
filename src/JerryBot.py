@@ -18,7 +18,7 @@ from cogs.JerryCog import JerryCog
 from cogs.SteamCog import SteamCog
 from cogs.TagCog import TagCog
 
-load_dotenv('token.env')
+load_dotenv('tokens.env')
 
 DYNAMIC_DATA_PATH: Final[str] = 'data/dynamic/'
 STATIC_DATA_PATH: Final[str] = 'data/static/'
@@ -78,7 +78,10 @@ class JerryBot:
     async def run(self, TOKEN, verbosity: int = logging.INFO):
         """Asynchronously runs the bot."""
 
-        await self.BOT.start(TOKEN, reconnect=True)
+        try:
+            await self.BOT.start(TOKEN, reconnect=True)
+        except discord.errors.LoginFailure:
+            print('Error: Invalid token.')
 
 
 class JerryCoreCog(CustomCog):
