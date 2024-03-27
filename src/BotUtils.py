@@ -166,7 +166,7 @@ class BotUtils:
             pass
 
         return users
-    
+
     def getProgressBar(self, value: float, maxValue: float, length: int = 20) -> str:
         """Generates an ASCII progress bar."""
 

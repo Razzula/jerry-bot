@@ -4,23 +4,27 @@ import asyncio
 from contextlib import asynccontextmanager
 import os
 
+import discord
 import dotenv
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from JerryBot import JerryBot
+from src.JerryBot import JerryBot
 
 dotenv.load_dotenv('tokens.env')
 
-authToken = os.environ.get('AUTH_TOKEN')
+authToken = os.environ.get('SERVER_AUTH_TOKEN')
 security = HTTPBearer()
 
+bot = None
+
 def authorised(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    # authorise request using bearer token
     if ((authToken is not None) and (credentials.credentials != authToken)):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Unauthorized')
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Unauthorised')
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_: FastAPI):
 
     global bot
 
@@ -38,19 +42,30 @@ async def lifespan(app: FastAPI):
 
     print('Server completed shutdown')
 
-app = FastAPI(lifespan=lifespan)
+server = FastAPI(lifespan=lifespan)
 
-@app.get('/test')
+@server.get('/test')
 async def test():
     """Test endpoint to check if the server is running."""
     return ':)'
 
-@app.get('/restart', dependencies=[Depends(authorised)])
-async def restart():
+@server.get('/restart', dependencies=[Depends(authorised)])
+async def restart(mode: str = 'RESTART'):
     """Restart the server."""
-    return {'message': 'TODO'}
 
-@app.get('/update', dependencies=[Depends(authorised)])
+    print('Initiating server restart...')
+    if (bot is not None):
+        try:
+            await bot.close()
+        except discord.errors.DiscordException as e:
+            print(f'Error: {e}')
+
+    print(mode) # this communicates with the runner script to restart the server
+    return { 'message': 'restarting' }
+
+@server.get('/update', dependencies=[Depends(authorised)])
 async def update():
     """Update and reboot the server."""
-    return {'message': 'TODO'}
+
+    print('Initiating server update...')
+    return await restart('UPDATE')

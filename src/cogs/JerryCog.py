@@ -10,9 +10,9 @@ import discord
 from discord.ext import commands
 import pytz
 
-from BotUtils import BotUtils, Emotes, Emote
-from DatabaseManager import DatabaseManager
-from cogs.CogTemplate import CustomCog
+from src.BotUtils import BotUtils, Emotes, Emote
+from src.DatabaseManager import DatabaseManager
+from src.cogs.CogTemplate import CustomCog
 
 PERSPECTIVE_CONVERTOR = {
     # first -> second

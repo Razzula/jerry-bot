@@ -9,14 +9,14 @@ from dotenv import load_dotenv
 import discord
 from discord.ext import commands
 
-from BotUtils import BotUtils, Emotes
-from DatabaseManager import DatabaseManager
-from apis.bibleAPI import BibleAPI
+from src.BotUtils import BotUtils, Emotes
+from src.DatabaseManager import DatabaseManager
+from src.apis.bibleAPI import BibleAPI
 
-from cogs.CogTemplate import CustomCog
-from cogs.JerryCog import JerryCog
-from cogs.SteamCog import SteamCog
-from cogs.TagCog import TagCog
+from src.cogs.CogTemplate import CustomCog
+from src.cogs.JerryCog import JerryCog
+from src.cogs.SteamCog import SteamCog
+from src.cogs.TagCog import TagCog
 
 load_dotenv('tokens.env')
 
@@ -82,6 +82,11 @@ class JerryBot:
             await self.BOT.start(TOKEN, reconnect=True)
         except discord.errors.LoginFailure:
             print('Error: Invalid token.')
+
+    async def close(self):
+        """Closes the bot."""
+
+        await self.BOT.close()
 
 
 class JerryCoreCog(CustomCog):
@@ -206,7 +211,7 @@ class JerryCoreCog(CustomCog):
                     return
 
                 ## DECIDE STEAM GAME
-                if (any(keyword in message for keyword in ['choose', 'decide', 'pick' 'which', 'what'])):
+                if (any(keyword in message for keyword in ['choose', 'decide', 'pick', 'which', 'what'])):
                     if ('game' in message):
                         await self.callCommand('SteamCog', SteamCog.decideGame, context, message)
                         return
