@@ -139,7 +139,7 @@ class SteamAPI:
             # ensure game is multiplayer
             if ((categories := result.get('categories')) is not None):
                 for category in categories:
-                    if (category.get('description').lower() == "multi-player"):
+                    if (category.get('description').lower() == 'multi-player'):
                         isMultiplayer = True
                         break
 

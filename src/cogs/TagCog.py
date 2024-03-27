@@ -8,15 +8,16 @@ from discord.ext import commands
 
 from src.BotUtils import BotUtils, Emotes, Emote
 from src.cogs.CogTemplate import CustomCog
+from src.logger import Logger
 
 class TagCog(CustomCog):
     """TODO"""
 
-    def __init__(self, bot: commands.Bot, botUtils: BotUtils, gifs: dict[str, list[str]]):
+    def __init__(self, bot: commands.Bot, logger: Logger, botUtils: BotUtils, gifs: dict[str, list[str]]):
 
         # self.DB_MANAGER: Final[DatabaseManager] = dbManager
 
-        super().__init__('TagCog', [])
+        super().__init__('TagCog', logger, [])
 
         self.BOT: Final[commands.Bot] = bot
         self.BOT_UTILS: Final[BotUtils] = botUtils

@@ -13,6 +13,7 @@ import pytz
 from src.BotUtils import BotUtils, Emotes, Emote
 from src.DatabaseManager import DatabaseManager
 from src.cogs.CogTemplate import CustomCog
+from src.logger import Logger
 
 PERSPECTIVE_CONVERTOR = {
     # first -> second
@@ -38,11 +39,12 @@ MESSAGE_SEPERATOR = r'\N'
 class JerryCog(CustomCog):
     """TODO"""
 
-    def __init__(self, bot: commands.Bot, botUtils: BotUtils, dbManager: DatabaseManager, gifs: dict[str, list[str]]):
+    def __init__(self, bot: commands.Bot, logger: Logger, botUtils: BotUtils, dbManager: DatabaseManager, gifs: dict[str, list[str]]):
 
+        self.LOGGER: Final[Logger] = logger
         self.DB_MANAGER: Final[DatabaseManager] = dbManager
 
-        super().__init__('JerryCog', [
+        super().__init__('JerryCog', logger, [
             { 'aliases': ['party'], 'short': 'party', 'icon': '🎉', 'description': 'I like to move it, move it 🦝' },
             { 'aliases': ['pick', 'choose', 'select'], 'short': 'pick `a`,`b`,...', 'icon': '❔', 'description': 'Randomly select a choice from a list of options (or does it just return the first one? I can never remember).' },
             { 'aliases': ['roll'], 'short': 'roll `n`', 'icon': '🎲', 'description': 'Roll a d`n` die.' },
@@ -138,7 +140,7 @@ class JerryCog(CustomCog):
                             except discord.NotFound:
                                 await channel.send(self.BOT_UTILS.getGIF(gifName))
 
-                self.DB_MANAGER.removeFromCache(self.COG_NAME, 'presenceWaitlist', str(userAfter.id))                
+                self.DB_MANAGER.removeFromCache(self.COG_NAME, 'presenceWaitlist', str(userAfter.id))
 
     @commands.command(name='party')
     async def dance(self, context: Any):
@@ -232,10 +234,10 @@ class JerryCog(CustomCog):
                         await bonkJail.send(', '.join([u.mention for u in toBonk]))
                         await self.BOT_UTILS.sendGIF(bonkJail, random.choice(self.GIFS['shames']))
                     else:
-                        print("`#bonk-jail` channel does not exist")
+                        self.LOGGER.warn('`#bonk-jail` channel does not exist')
 
             else:
-                print("Role `Bonk Jail` does not exist")
+                self.LOGGER.warn('Role `Bonk Jail` does not exist')
                 await self.BOT_UTILS.sendGIF(context.channel, random.choice(self.GIFS['bonks']))
 
         else:  # no user specified
@@ -343,7 +345,7 @@ class JerryCog(CustomCog):
                 await self.triggerReminder(messageID, late=True)
 
         else:
-            print(f'Error fetching reminder {messageID} from database, when scheduling.')
+            self.LOGGER.error(f'Error fetching reminder {messageID} from database, when scheduling.')
 
     async def triggerReminder(self, messageID: str, late: bool = False):
         """TODO"""
@@ -382,7 +384,7 @@ class JerryCog(CustomCog):
                 WHERE message_id = '{messageID}'
             ''')
         else:
-            print(f'Error fetching reminder {messageID} from database, when sending.')
+            self.LOGGER.error(f'Error fetching reminder {messageID} from database, when sending.')
 
 
     def extractDelay(self, content: str) -> int:

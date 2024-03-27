@@ -10,8 +10,11 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from src.JerryBot import JerryBot
+from src.logger import Logger
 
 dotenv.load_dotenv('tokens.env')
+
+LOGGER = Logger('SERVER')
 
 authToken = os.environ.get('SERVER_AUTH_TOKEN')
 security = HTTPBearer()
@@ -32,15 +35,15 @@ async def lifespan(_: FastAPI):
         bot = await JerryBot.create()
         asyncio.create_task(bot.run(TOKEN))
     else:
-        print('Error: No token found')
+        LOGGER.error('Error: No token found')
         raise SystemExit
 
     if (authToken is None):
-        print('Warning: No authentication token found. Secure endpoints will not be available.')
+        LOGGER.warn('Warning: No authentication token found. Secure endpoints will not be available.')
 
     yield # Run the application
 
-    print('Server completed shutdown')
+    LOGGER.info('Server completed shutdown.')
 
 server = FastAPI(lifespan=lifespan)
 
@@ -53,12 +56,12 @@ async def test():
 async def restart(mode: str = 'RESTART'):
     """Restart the server."""
 
-    print('Initiating server restart...')
+    LOGGER.info('Initiating server restart...')
     if (bot is not None):
         try:
             await bot.close()
         except discord.errors.DiscordException as e:
-            print(f'Error: {e}')
+            LOGGER.error(f'Error: {e}')
 
     print(mode) # this communicates with the runner script to restart the server
     return { 'message': 'restarting' }
@@ -67,5 +70,5 @@ async def restart(mode: str = 'RESTART'):
 async def update():
     """Update and reboot the server."""
 
-    print('Initiating server update...')
+    LOGGER.info('Initiating server update...')
     return await restart('UPDATE')
