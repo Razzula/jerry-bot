@@ -9,6 +9,8 @@ from typing import Final, Any
 import discord
 from discord.ext import commands
 
+from src.logger import Logger
+
 class Emote:
     """TODO ..."""
 
@@ -21,7 +23,7 @@ class Emote:
 class Emotes(Enum):
     """Enum of custom emotes"""
 
-    JERRY = Emote('jerry', '❤️', ["jerry", "jezza", "good bot", "attab"])
+    JERRY = Emote('jerry', '❤️', ['jerry', 'jezza', 'good bot', 'attab'])
 
     # Flags
     AR = Emote('ar-flag', '🇦🇷', ['argent'])
@@ -48,9 +50,11 @@ class Emotes(Enum):
 class BotUtils:
     """TODO"""
 
-    def __init__(self, staticDataPath, dynamicDataPath):
+    def __init__(self, logger, staticDataPath, dynamicDataPath):
         self.STATIC_DATA_PATH: Final[str] = staticDataPath
         self.DYNAMIC_DATA_PATH: Final[str] = dynamicDataPath
+
+        self.LOGGER : Final[Logger] = logger
 
     def getActivity(self):
         """Determine the bot's activity and profile picture based on the current date."""
@@ -129,7 +133,7 @@ class BotUtils:
         try:
             await self.reactWithEmoteStr(context, emote.emote)
         except discord.errors.HTTPException:
-            print(f'Error: Unknown Emoji: {emote.name} ({emote.emote})')
+            self.LOGGER.error(f'Error: Unknown Emoji: {emote.name} ({emote.emote})')
             if (emote.fallback is not None):
                 await self.reactWithEmoteStr(context, emote.fallback)
 

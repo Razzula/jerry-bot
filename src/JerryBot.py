@@ -17,6 +17,7 @@ from src.cogs.CogTemplate import CustomCog
 from src.cogs.JerryCog import JerryCog
 from src.cogs.SteamCog import SteamCog
 from src.cogs.TagCog import TagCog
+from src.logger import Logger
 
 load_dotenv('tokens.env')
 
@@ -34,19 +35,21 @@ class JerryBot:
         with open(os.path.join(STATIC_DATA_PATH, 'gifs.json'), 'r', encoding='utf-8') as file:
             self.GIFS = json.load(file)
 
+        self.LOGGER = Logger('BOT', level=logging.INFO)
+
         self.DB_MANAGER = DatabaseManager(os.path.join(DYNAMIC_DATA_PATH, 'global.db'))
 
-        self.BOT_UTILS = BotUtils(STATIC_DATA_PATH, DYNAMIC_DATA_PATH)
+        self.BOT_UTILS = BotUtils(self.LOGGER, STATIC_DATA_PATH, DYNAMIC_DATA_PATH)
 
         intents = discord.Intents.all()
         self.BOT = commands.Bot(intents=intents, command_prefix='!', help_command=None, case_insensitive=True, strip_after_prefix=True)
 
         # Cogs
-        self.JerryCoreCog = JerryCoreCog(self.BOT, self.BOT_UTILS, self.DB_MANAGER, self.BOT_ALIASES, self.GIFS)
+        self.JerryCoreCog = JerryCoreCog(self.BOT, self.LOGGER, self.BOT_UTILS, self.DB_MANAGER, self.BOT_ALIASES, self.GIFS)
         self.cogs = [
-            JerryCog(self.BOT, self.BOT_UTILS, self.DB_MANAGER, self.GIFS),
-            SteamCog(self.BOT, self.BOT_UTILS, self.DB_MANAGER, os.environ.get("STEAM_API_KEY")),
-            TagCog(self.BOT, self.BOT_UTILS, self.GIFS),
+            JerryCog(self.BOT, self.LOGGER, self.BOT_UTILS, self.DB_MANAGER, self.GIFS),
+            SteamCog(self.BOT, self.LOGGER, self.BOT_UTILS, self.DB_MANAGER, os.environ.get('STEAM_API_KEY')),
+            TagCog(self.BOT, self.LOGGER, self.BOT_UTILS, self.GIFS),
         ]
 
     @classmethod
@@ -81,7 +84,7 @@ class JerryBot:
         try:
             await self.BOT.start(TOKEN, reconnect=True)
         except discord.errors.LoginFailure:
-            print('Error: Invalid token.')
+            self.LOGGER.error('Error: Invalid token.')
 
     async def close(self):
         """Closes the bot."""
@@ -96,11 +99,12 @@ class JerryCoreCog(CustomCog):
     Provides basic functionality such as help, ping, and pong.
     """
 
-    def __init__(self, bot: commands.Bot, botUtils: BotUtils, dbManager: DatabaseManager, botNames: list[str], gifs: dict[str, list[str]]):
+    def __init__(self, bot: commands.Bot, logger: Logger, botUtils: BotUtils, dbManager: DatabaseManager, botNames: list[str], gifs: dict[str, list[str]]):
 
+        self.LOGGER: Final[Logger] = logger
         self.DB_MANAGER: Final[DatabaseManager] = dbManager
 
-        super().__init__('JerryCoreCog', [
+        super().__init__('JerryCoreCog', logger, [
             { 'aliases': ['help'], 'short': 'help', 'icon': '❓', 'description': '...literally the command you just used.' },
             { 'aliases': ['ping', 'pong'], 'short': 'ping, pong', 'icon': '🏓', 'description': 'Just like on the Atari.' },
         ])
@@ -144,7 +148,7 @@ class JerryCoreCog(CustomCog):
     async def on_ready(self):
         """Initializes the bot when it is ready."""
 
-        print(f'Logged in as {self.BOT.user}\n')
+        self.LOGGER.info(f'Logged in as {self.BOT.user}\n')
         await self.BOT.change_presence(status=discord.Status.invisible) # appear offline initially, whilst bot is setting up
 
         # ACTIVITY
@@ -155,13 +159,13 @@ class JerryCoreCog(CustomCog):
             try:
                 await self.BOT.user.edit(avatar=avatar)
             except discord.errors.HTTPException:
-                print('Avatar not changed: HTTPException')
+                self.LOGGER.warn('Avatar not changed: HTTPException')
         # presence
         await self.BOT.change_presence(
             activity=discord.Activity(type=discord.ActivityType.listening, name=activity)
         )
 
-        print('Ready.\n')
+        self.LOGGER.info('Ready.\n')
 
     @commands.Cog.listener()
     async def on_message(self, context: Any):
@@ -221,7 +225,7 @@ class JerryCoreCog(CustomCog):
                     if (self.WISDOMS):
                         await context.channel.send(random.choice(self.WISDOMS).format('<@' + str(context.author.id) + '>'))
                     else:
-                        print('Error: fortune.txt is blank')
+                        self.LOGGER.error('Error: fortune.txt is blank')
                         await context.channel.send("Hmm. I can't think of anything... 🤔")
                     return
 

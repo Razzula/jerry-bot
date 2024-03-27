@@ -14,8 +14,11 @@ import dotenv
 import httpx
 
 from DatabaseManager import DatabaseManager
+from logger import Logger
 
 dotenv.load_dotenv('tokens.env')
+
+logger = Logger('RUNNER')
 
 DYNAMIC_DATA_PATH: Final[str] = 'data/dynamic/'
 WEBHOOK_TOKEN = os.environ.get('WEBHOOK_TOKEN')
@@ -61,7 +64,7 @@ class Server:
     def serve(self):
         """Start the FastAPI server."""
 
-        command = ["uvicorn", "src.server:app", "--host", "0.0.0.0", "--port", "8000"]
+        command = ['uvicorn', 'src.server:server', '--host', '0.0.0.0', '--port', '8000']
         if (os.environ.get('DEBUG') == 'True'):
             command.append('--reload')
         self.process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1, universal_newlines=True)
@@ -107,7 +110,7 @@ async def runner():
     """Run the FastAPI server, with health checks."""
 
     # setup
-    print('Starting runner...')
+    logger.info('Starting runner...')
 
     DB_MANAGER.executeOneshot('''
         CREATE TABLE IF NOT EXISTS emergencyContacts (
@@ -123,9 +126,9 @@ async def runner():
         if (connection is False):
             match result:
                 case None:
-                    print('Error: Internet connection not available.')
+                    logger.error('Error: Internet connection not available.')
                 case _:
-                    print(f'Error: Discord API returned {result}.')
+                    logger.error(f'Error: Discord API returned {result}.')
             return
 
         botID = result
@@ -133,14 +136,14 @@ async def runner():
         # then, run the FastAPI server
         server = Server()
         thread = Thread(target=server.monitor)
-        print('Starting server...')
+        logger.info('Starting server...')
         server.serve()
         thread.start()
 
         # then, perform a health check on the server
         await asyncio.sleep(10)
         if (not await ping('http://localhost:8000/test')):
-            print('Error: Server is not running.')
+            logger.error('Error: Server is not running.')
 
             await alert(textwrap.dedent(f'''\
                 Hear ye, hear ye! It is with a heavy heart and a slightly unsteady hand (the mead this evening was particularly potent) that I must relay the most unfortunate tidings. Our beloved sovereign, <@{botID}>, in a turn of events as unforeseen as it is calamitous, has succumbed to the wiles of an insidious well and has thus descended into its abyssal depths with all the grace of a leaden feather.
@@ -154,11 +157,11 @@ async def runner():
         thread.join() # wait for the server to finish
         result = server.getStatus()
         if (result == ServerStatus.UPDATE):
-            print('Server stopped. Update required.')
+            logger.info('Server stopped. Update required.')
             update()
-            print('Update complete. Restarting...')
+            logger.info('Update complete. Restarting...')
         else:
-            print('Server stopped. Restarting...')
+            logger.info('Server stopped. Restarting...')
 
 async def alert(message: str):
     """Alert the user that the server is running."""
@@ -181,7 +184,7 @@ async def sendWebhook(webhookID: str, message: str):
             response = await client.post(url, json=payload)
 
             if (response.status_code not in [200, 204]):
-                print(f'Failed to sending webhook to {webhookID}: {response.status_code}')
+                logger.error(f'Failed to sending webhook to {webhookID}: {response.status_code}')
 
 def update():
     """Update the server."""

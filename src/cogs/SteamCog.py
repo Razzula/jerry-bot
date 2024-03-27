@@ -14,16 +14,18 @@ from src.BotUtils import BotUtils, Emotes, Emote
 from src.DatabaseManager import DatabaseManager
 from src.cogs.CogTemplate import CustomCog
 
+from src.logger import Logger
+
 RETRY_EMOJI: Final[str] = '🔁'
 
 class SteamCog(CustomCog):
     """TODO"""
 
-    def __init__(self, bot: commands.Bot, botUtils: BotUtils, dbManager: DatabaseManager, steamAPIKey: str):
+    def __init__(self, bot: commands.Bot, logger: Logger, botUtils: BotUtils, dbManager: DatabaseManager, steamAPIKey: str):
 
         self.DB_MANAGER: Final[DatabaseManager] = dbManager
 
-        super().__init__('SteamCog', [
+        super().__init__('SteamCog', logger, [
             { 'aliases': ['game'], 'short': 'game', 'icon': Emotes.STEAM.value.emote, 'description': 'Select a game to play from your Steam library. If you are in a voice channel, it will select a shared game among all active users.' },
             { 'aliases': ['hunt'], 'short': 'hunt', 'icon': '🏹', 'description': 'View the Steam achievements of your currently played game. Request a quarry for honour and valour.' },
             { 'aliases': ['quarry'], 'short': 'quarry', 'icon': '🏆', 'description': 'View your active quarry, and be rewarded if you have achieved it.' },
@@ -117,10 +119,10 @@ class SteamCog(CustomCog):
 
         # select game
         if (sharedGameLibrary == [None]): # TODO: handle this properly
-            await context.channel.send("No valid Steam users found. Use `!steam <your_steam_id>` to resolve this.")
+            await context.channel.send('No valid Steam users found. Use `!steam <your_steam_id>` to resolve this.')
 
         elif (not sharedGameLibrary): # TODO: handle this properly
-            await context.channel.send("No shared games found.")
+            await context.channel.send('No shared games found.')
 
         else:
             gameEmbed = self.getGameEmbed(
@@ -230,11 +232,11 @@ class SteamCog(CustomCog):
                 ON CONFLICT (discord_id) DO UPDATE SET steam_id = '{steamID}'
             ''')
 
-            await context.channel.send(f"Steam ID set to `{steamID}`.")
+            await context.channel.send(f'Steam ID set to `{steamID}`.')
 
         else:
             await self.BOT_UTILS.reactWithEmote(context, Emotes.EKKY_DISAPPROVES.value)
-            await context.channel.send(f"`{arg}` is not a valid Steam ID.")
+            await context.channel.send(f'`{arg}` is not a valid Steam ID.')
 
     @commands.command(name='hunt', pass_context=True, aliases=['achievement'])
     async def decideAchievement(self, context: Any):
@@ -244,14 +246,14 @@ class SteamCog(CustomCog):
         # get steam id
         res = self.DB_MANAGER.executeOneshot(f"SELECT steam_id FROM steam_ids WHERE discord_id = '{context.author.id}'")
         if (res is None or len(res) == 0):
-            await context.channel.send(f'You have not set a Steam ID yet. Use `!steam <your_steam_id>` to resolve this.')
+            await context.channel.send('You have not set a Steam ID yet. Use `!steam <your_steam_id>` to resolve this.')
             return
 
         # get current game
         userData = self.STEAM_API.getSteamProfile(res[0][0])
         activity = userData.get('gameid')
         if (activity is None):
-            await context.channel.send(f"You don't seem to be currently playing a game.")
+            await context.channel.send("You don't seem to be currently playing a game.")
             return
 
         embed, gameData, missingAchievements = self.getHuntEmbed(res[0][0], activity)
@@ -486,7 +488,7 @@ class QuarryView(View):
 
         # check if quarry exists
         res = self.PARENT.DB_MANAGER.executeOneshot(f'''
-            SELECT steam_appid, achievement_id FROM steam_quarries WHERE discord_id = '{interaction.user.id}'                                 
+            SELECT steam_appid, achievement_id FROM steam_quarries WHERE discord_id = '{interaction.user.id}'
         ''')
 
         if (len(res) != 0):
