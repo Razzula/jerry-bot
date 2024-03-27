@@ -8,11 +8,11 @@ from discord.ext import commands
 from discord import Embed, Color, ButtonStyle
 from discord.ui import Button, View
 
-from apis.steamAPI import SteamAPI, SteamTags
+from src.apis.steamAPI import SteamAPI, SteamTags
 
-from BotUtils import BotUtils, Emotes, Emote
-from DatabaseManager import DatabaseManager
-from cogs.CogTemplate import CustomCog
+from src.BotUtils import BotUtils, Emotes, Emote
+from src.DatabaseManager import DatabaseManager
+from src.cogs.CogTemplate import CustomCog
 
 RETRY_EMOJI: Final[str] = '🔁'
 
@@ -60,7 +60,7 @@ class SteamCog(CustomCog):
     async def on_reaction_add(self, reaction, user):
         if (user.id == self.BOT.user.id): # ignore self
             return
-        
+
         if (reaction.emoji == RETRY_EMOJI):
             # get embed data
             embedData = self.DB_MANAGER.getFromCache(self.COG_NAME, 'activeEmbeds', str(reaction.message.id))
@@ -128,7 +128,7 @@ class SteamCog(CustomCog):
             )
 
             res = await context.channel.send(embed=gameEmbed)
-            
+
             # handle voting
             if (res is not None):
                 await res.add_reaction(RETRY_EMOJI)
@@ -239,21 +239,21 @@ class SteamCog(CustomCog):
     @commands.command(name='hunt', pass_context=True, aliases=['achievement'])
     async def decideAchievement(self, context: Any):
         """TODO"""
-        
+
         # STEAM API
         # get steam id
         res = self.DB_MANAGER.executeOneshot(f"SELECT steam_id FROM steam_ids WHERE discord_id = '{context.author.id}'")
         if (res is None or len(res) == 0):
             await context.channel.send(f'You have not set a Steam ID yet. Use `!steam <your_steam_id>` to resolve this.')
             return
-        
+
         # get current game
         userData = self.STEAM_API.getSteamProfile(res[0][0])
         activity = userData.get('gameid')
         if (activity is None):
             await context.channel.send(f"You don't seem to be currently playing a game.")
             return
-        
+
         embed, gameData, missingAchievements = self.getHuntEmbed(res[0][0], activity)
         view = AchievementView(self, gameData, missingAchievements)
 
@@ -322,11 +322,11 @@ class SteamCog(CustomCog):
     @commands.command(name='quarry', pass_context=True)
     async def quarry(self, context: Any):
         """TODO"""
-        
+
         res = self.DB_MANAGER.executeOneshot(f'''
             SELECT i.steam_id, q.steam_appid, q.achievement_id, q.date FROM steam_quarries q
             JOIN steam_ids i ON i.discord_id = q.discord_id
-            WHERE q.discord_id = '{context.author.id}'                         
+            WHERE q.discord_id = '{context.author.id}'
         ''')
 
         if (len(res) == 0):
@@ -347,7 +347,7 @@ class SteamCog(CustomCog):
                         'achieved': achievement['achieved'],
                     }
                     break
-            
+
             if (quarry is not None):
                 embed = self.getQuarryEmbed(quarry, author=context.author, date=res[0][3])
 
@@ -361,7 +361,7 @@ class SteamCog(CustomCog):
                         f'Congratulations, {context.author.mention}! You have achieved your quarry! 🥳',
                         embed=embed
                     )
-                
+
                 else:
                     await context.channel.send(embed=embed)
 
@@ -403,11 +403,11 @@ class AchievementView(View):
 
         createButton(self, 'Challenge Me!', ButtonStyle.danger, 'quarry', self.triggerQuarry)
         #createButton('Show More', ButtonStyle.secondary, 'more', self.button_callback)
-    
+
 
     async def triggerQuarry(self, interaction):
         """TODO"""
-        
+
         # check if quarry exists
         res = self.PARENT.DB_MANAGER.executeOneshot(f'''
             SELECT steam_appid, achievement_id FROM steam_quarries WHERE discord_id = '{interaction.user.id}'                                 
@@ -492,7 +492,7 @@ class QuarryView(View):
         if (len(res) != 0):
             await interaction.response.send_message('You already have an active quarry. Use `!quarry` to view it.', ephemeral=True)
             return
-        
+
         # add quarry to db
         self.PARENT.DB_MANAGER.executeOneshot(f'''
             INSERT INTO steam_quarries (discord_id, steam_appid, achievement_id)

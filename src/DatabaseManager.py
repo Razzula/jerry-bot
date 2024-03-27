@@ -15,7 +15,7 @@ class DatabaseManager:
 
         if (not dbPath.endswith('.db')):
             raise ValueError('Database path must end with .db extension.')
-        
+
         # create the database file if it does not exist
         if (not os.path.exists(os.path.dirname(dbPath))):
             os.makedirs(os.path.dirname(dbPath))
@@ -66,7 +66,7 @@ class DatabaseManager:
             if (temp is not None):
                 return json.loads(temp)
         return None
-    
+
     def removeFromCache(self, cog: str, store: str, key: str):
         """TODO"""
         if (self.CACHE is not None): # redis may not be connected

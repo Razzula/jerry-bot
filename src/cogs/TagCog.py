@@ -6,8 +6,8 @@ from typing import Final, Any
 import discord
 from discord.ext import commands
 
-from BotUtils import BotUtils, Emotes, Emote
-from cogs.CogTemplate import CustomCog
+from src.BotUtils import BotUtils, Emotes, Emote
+from src.cogs.CogTemplate import CustomCog
 
 class TagCog(CustomCog):
     """TODO"""
@@ -32,23 +32,23 @@ class TagCog(CustomCog):
             return
         if (message.startswith('http') or message.startswith('www.')):  # ignore links (GIFs)
             return
-        
+
         # ensure user is 'It'
         tagRole: Any = discord.utils.get(context.guild.roles, name='It')
         if (tagRole is None):
             # TODO create role
             tagRole = await context.guild.create_role(name='It', color=discord.Colour.blurple())
-        
+
         if (tagRole in context.author.roles):
             playerRole: Any = discord.utils.get(context.guild.roles, name='PlayingTag')
-        
+
             # find target
             users = self.BOT_UTILS.extractMentionsFromMessage(message).get('users')
             user = None
             while (user is None):
                 if (len(users) == 0):
                     return
-                
+
                 userID = random.choice(users)
                 user = context.guild.get_member(int(userID))
 
