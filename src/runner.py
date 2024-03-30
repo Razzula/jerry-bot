@@ -64,7 +64,7 @@ class Server:
     def serve(self):
         """Start the FastAPI server."""
 
-        command = ['uvicorn', 'src.server:server', '--host', '0.0.0.0', '--port', '8000']
+        command = ['python3', '-m', 'uvicorn', 'src.server:server', '--host', '0.0.0.0', '--port', '8000']
         if (os.environ.get('DEBUG') == 'True'):
             command.append('--reload')
         self.process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1, universal_newlines=True)
