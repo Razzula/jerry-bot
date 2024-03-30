@@ -120,7 +120,7 @@ class BotUtils:
 
         if (isinstance(gifName, list)):
             gifName = random.choice(gifName)
-        return f'https://raw.githubusercontent.com/Razzula/jerry-bot/v2.0/data/static/gifs/{gifName}.gif' # TODO: switch to master branch
+        return f'https://raw.githubusercontent.com/Razzula/jerry-bot/main/data/static/gifs/{gifName}.gif'
 
     async def sendGIF(self, channel: Any, gifName: str | list[str]):
         """Sends a GIF to the current channel."""
