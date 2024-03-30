@@ -107,6 +107,7 @@ class JerryCoreCog(CustomCog):
         super().__init__('JerryCoreCog', logger, [
             { 'aliases': ['help'], 'short': 'help', 'icon': '❓', 'description': '...literally the command you just used.' },
             { 'aliases': ['ping', 'pong'], 'short': 'ping, pong', 'icon': '🏓', 'description': 'Just like on the Atari.' },
+            # { 'aliases': ['version'], 'short': 'version', 'icon': '⚙️', 'description': 'Display the current version of the bot.' }, # Disabled from help menu
         ])
 
         self.BOT: Final[commands.Bot] = bot
@@ -303,3 +304,14 @@ class JerryCoreCog(CustomCog):
                 return
 
         await context.send(embed=embed)
+
+    @commands.command(name='version')
+    async def version(self, context: Any):
+        """Displays the current version of the bot."""
+
+        with open('VERSION', 'r', encoding='utf-8') as file:
+            version = file.read().strip()
+        if (not version):
+            version = 'Unknown...'
+
+        await context.send(f'⚙️ JerryBot v{version}')
