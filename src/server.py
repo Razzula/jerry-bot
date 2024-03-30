@@ -1,7 +1,6 @@
 # pylint: disable=fixme, line-too-long, invalid-name, superfluous-parens, trailing-whitespace, arguments-differ
 """FastAPI server for JerryBot."""
 import asyncio
-from contextlib import asynccontextmanager
 import os
 
 import discord
@@ -26,8 +25,10 @@ def authorised(credentials: HTTPAuthorizationCredentials = Depends(security)):
     if ((authToken is not None) and (credentials.credentials != authToken)):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Unauthorised')
 
-@asynccontextmanager
-async def lifespan(_: FastAPI):
+server = FastAPI()
+
+@server.on_event('startup')
+async def startupEvent():
 
     global bot
 
@@ -41,11 +42,10 @@ async def lifespan(_: FastAPI):
     if (authToken is None):
         LOGGER.warn('Warning: No authentication token found. Secure endpoints will not be available.')
 
-    yield # Run the application
+@server.on_event('shutdown')
+async def shutdownEvent():
 
     LOGGER.info('Server completed shutdown.')
-
-server = FastAPI(lifespan=lifespan)
 
 @server.get('/test')
 async def test():
