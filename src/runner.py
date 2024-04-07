@@ -4,6 +4,7 @@ import asyncio
 from enum import Enum
 import json
 import os
+import platform
 import signal
 import subprocess
 from threading import Thread
@@ -21,10 +22,9 @@ dotenv.load_dotenv('tokens.env')
 logger = Logger('RUNNER')
 
 DYNAMIC_DATA_PATH: Final[str] = 'data/dynamic/'
-WEBHOOK_TOKEN = os.environ.get('WEBHOOK_TOKEN')
 DISCORD_BOT_TOKEN = os.environ.get('DISCORD_BOT_TOKEN')
 
-DB_MANAGER = DatabaseManager(os.path.join(DYNAMIC_DATA_PATH, 'global.db'))
+DB_MANAGER = DatabaseManager(os.path.join(DYNAMIC_DATA_PATH, 'global.sqlite'))
 
 async def ping(address: str, auth: str | None = None, resultKey: str | None = None):
     """Ping an address to check if it is reachable."""
@@ -61,11 +61,15 @@ class Server:
         self.process = None
         self.status = ServerStatus.COLD
 
+        self.DEBUG_MODE = os.environ.get('DEBUG') is not None
+
     def serve(self):
         """Start the FastAPI server."""
 
-        command = ['python3', '-m', 'uvicorn', 'src.server:server', '--host', '0.0.0.0', '--port', '8000']
-        if (os.environ.get('DEBUG') == 'True'):
+        python = 'python3' if (platform.system() == 'Linux') else 'python'
+
+        command = [python, '-m', 'uvicorn', 'src.server:server', '--host', '0.0.0.0', '--port', '8000']
+        if (self.DEBUG_MODE):
             command.append('--reload')
         self.process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1, universal_newlines=True)
 
@@ -114,7 +118,9 @@ async def runner():
 
     DB_MANAGER.executeOneshot('''
         CREATE TABLE IF NOT EXISTS emergencyContacts (
-            webhookID VARCHAR(19) PRIMARY KEY
+            webhookID VARCHAR(19) PRIMARY KEY,
+            webhookToken VARCHAR(68),
+            name VARCHAR(32)
         )
     ''')
 
@@ -140,11 +146,13 @@ async def runner():
         server.serve()
         thread.start()
 
-        # then, perform a health check on the server
         await asyncio.sleep(10)
-        if (not await ping('http://localhost:8000/test')):
+        # then, perform a health check on the server
+        connection, _ = await ping('http://localhost:8000/test')
+        if (not connection):
             logger.error('Error: Server is not running.')
 
+            # alert using the established webhooks
             await alert(textwrap.dedent(f'''\
                 Hear ye, hear ye! It is with a heavy heart and a slightly unsteady hand (the mead this evening was particularly potent) that I must relay the most unfortunate tidings. Our beloved sovereign, <@{botID}>, in a turn of events as unforeseen as it is calamitous, has succumbed to the wiles of an insidious well and has thus descended into its abyssal depths with all the grace of a leaden feather.
 
@@ -166,18 +174,18 @@ async def runner():
 async def alert(message: str):
     """Alert the user that the server is running."""
 
-    databaseManager = DatabaseManager(os.path.join(DYNAMIC_DATA_PATH, 'global.db'))
-    emegrencyContacts = databaseManager.executeOneshot('SELECT webhookID FROM emergencyContacts')
+    databaseManager = DatabaseManager(os.path.join(DYNAMIC_DATA_PATH, 'global.sqlite'))
+    emegrencyContacts = databaseManager.executeOneshot('SELECT webhookID, webhookToken FROM emergencyContacts')
 
     for contact in emegrencyContacts:
-        await sendWebhook(contact[0], message)
+        await sendWebhook(contact[0], contact[1], message)
 
-async def sendWebhook(webhookID: str, message: str):
+async def sendWebhook(webhookID: str, webhookToken: str, message: str):
     """Send a message to a Discord webhook."""
 
     if ((webhookID is not None) and (message is not None)):
 
-        url = f'https://discord.com/api/webhooks/{webhookID}/{WEBHOOK_TOKEN}'
+        url = f'https://discord.com/api/webhooks/{webhookID}/{webhookToken}'
         payload = {'content': message}
 
         async with httpx.AsyncClient() as client:

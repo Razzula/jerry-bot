@@ -9,6 +9,7 @@ from typing import Final, Any
 import discord
 from discord.ext import commands
 
+from src.DatabaseManager import DatabaseManager
 from src.logger import Logger
 
 class Emote:
@@ -180,3 +181,14 @@ class BotUtils:
         percentage = int(value / maxValue * 100)
         progress = int(length * value / maxValue)
         return f'[{fill * progress}{empty * (length - progress)}] {percentage}%'
+
+    def isUserBotAdmin(self, userID: str, dbManager: DatabaseManager) -> bool:
+        """Checks if a user is a bot admin."""
+
+        res = dbManager.executeOneshot(f'''
+            SELECT * FROM botAdmins
+            WHERE discordID = '{userID}'
+            LIMIT 1
+        ''')
+
+        return (len(res) > 0)

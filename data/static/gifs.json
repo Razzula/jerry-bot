@@ -17,6 +17,10 @@
             "GandalfReading"
         ],
         [
+            "mount",
+            "MountainsGandalf"
+        ],
+        [
             "deforestation",
             "Treebeard"
         ],
@@ -139,6 +143,10 @@
         [
             "wrex",
             "WrexShepard"
+        ],
+        [
+            ["going to", "gonna"],
+            "WereItSoEasy"
         ]
     ],
     "summons": [

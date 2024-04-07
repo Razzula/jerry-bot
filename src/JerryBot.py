@@ -3,6 +3,7 @@
 import os
 import random
 import json
+import subprocess
 from typing import Final, Any, Sequence
 import logging
 from dotenv import load_dotenv
@@ -29,7 +30,7 @@ class JerryBot:
 
     BOT_ALIASES = ['jerry', 'jezza', 'jeyry']
 
-    def __init__(self):
+    def __init__(self, updateMethod: Any):
         """Constructor for the bot."""
 
         with open(os.path.join(STATIC_DATA_PATH, 'gifs.json'), 'r', encoding='utf-8') as file:
@@ -37,15 +38,18 @@ class JerryBot:
 
         self.LOGGER = Logger('BOT', level=logging.INFO)
 
-        self.DB_MANAGER = DatabaseManager(os.path.join(DYNAMIC_DATA_PATH, 'global.db'))
+        self.DB_MANAGER = DatabaseManager(os.path.join(DYNAMIC_DATA_PATH, 'global.sqlite'))
 
         self.BOT_UTILS = BotUtils(self.LOGGER, STATIC_DATA_PATH, DYNAMIC_DATA_PATH)
 
         intents = discord.Intents.all()
         self.BOT = commands.Bot(intents=intents, command_prefix='!', help_command=None, case_insensitive=True, strip_after_prefix=True)
 
+        # Database
+        self.setupDatabase()
+
         # Cogs
-        self.JerryCoreCog = JerryCoreCog(self.BOT, self.LOGGER, self.BOT_UTILS, self.DB_MANAGER, self.BOT_ALIASES, self.GIFS)
+        self.JerryCoreCog = JerryCoreCog(self.BOT, self.LOGGER, self.BOT_UTILS, self.DB_MANAGER, self.BOT_ALIASES, self.GIFS, updateMethod)
         self.cogs = [
             JerryCog(self.BOT, self.LOGGER, self.BOT_UTILS, self.DB_MANAGER, self.GIFS),
             SteamCog(self.BOT, self.LOGGER, self.BOT_UTILS, self.DB_MANAGER, os.environ.get('STEAM_API_KEY')),
@@ -53,12 +57,29 @@ class JerryBot:
         ]
 
     @classmethod
-    async def create(cls):
+    async def create(cls, updateMethod: Any):
         """Asynchronously creates a bot instance (supports loading cogs)."""
 
-        bot = cls()
+        bot = cls(updateMethod)
         await bot.loadCogs()
         return bot
+
+    def setupDatabase(self):
+        """Sets up the database for the bot."""
+
+        self.DB_MANAGER.executeOneshot('''
+            CREATE TABLE IF NOT EXISTS botAdmins (
+                discordID VARCHAR(18) PRIMARY KEY
+            )
+        ''')
+
+        self.DB_MANAGER.executeOneshot('''
+            CREATE TABLE IF NOT EXISTS emergencyContacts (
+                webhookID VARCHAR(19) PRIMARY KEY,
+                webhookToken VARCHAR(68),
+                name VARCHAR(32)
+            )
+        ''')
 
     async def loadCogs(self):
         """Loads the cogs defined in the constructor."""
@@ -99,7 +120,7 @@ class JerryCoreCog(CustomCog):
     Provides basic functionality such as help, ping, and pong.
     """
 
-    def __init__(self, bot: commands.Bot, logger: Logger, botUtils: BotUtils, dbManager: DatabaseManager, botNames: list[str], gifs: dict[str, list[str]]):
+    def __init__(self, bot: commands.Bot, logger: Logger, botUtils: BotUtils, dbManager: DatabaseManager, botNames: list[str], gifs: dict[str, list[str]], updateMethod: Any):
 
         self.LOGGER: Final[Logger] = logger
         self.DB_MANAGER: Final[DatabaseManager] = dbManager
@@ -111,6 +132,7 @@ class JerryCoreCog(CustomCog):
         ])
 
         self.BOT: Final[commands.Bot] = bot
+        self.updateMethod: Final[Any] = updateMethod
 
         self.BOT_UTILS: Final[BotUtils] = botUtils
         self.BIBLE_API = BibleAPI(STATIC_DATA_PATH)
@@ -149,8 +171,9 @@ class JerryCoreCog(CustomCog):
     async def on_ready(self):
         """Initializes the bot when it is ready."""
 
+        self.LOGGER.info(f'Running JerryBot v{self.getBotVersion()}')
         self.LOGGER.info(f'Logged in as {self.BOT.user}\n')
-        await self.BOT.change_presence(status=discord.Status.invisible) # appear offline initially, whilst bot is setting up
+        await self.BOT.change_presence(status=discord.Status.do_not_disturb) # appear DND initially, whilst bot is setting up
 
         # ACTIVITY
         activity, avatar = self.BOT_UTILS.getActivity()
@@ -195,6 +218,10 @@ class JerryCoreCog(CustomCog):
             return
 
         # SOFT COMMANDS
+
+        # for name in [*self.BOT_ALIASES, 'someone', 'somebody', 'anyone', 'anybody']: # jerry, ..., someone, ...
+        #     if (name in message):
+        ## REMINDERS
         for keyword in ['remind', 'ask', 'tell']:
             if (keyword in message):
                 await self.callCommand('JerryCog', JerryCog.setReminder, context, keyword)
@@ -202,8 +229,6 @@ class JerryCoreCog(CustomCog):
 
         for name in self.BOT_ALIASES: # jerry, ...
             if (name in message):
-
-                ## REMINDERS
 
                 ## BONK
                 if ('bonk' in message):
@@ -309,9 +334,26 @@ class JerryCoreCog(CustomCog):
     async def version(self, context: Any):
         """Displays the current version of the bot."""
 
-        with open('VERSION', 'r', encoding='utf-8') as file:
-            version = file.read().strip()
-        if (not version):
-            version = 'Unknown...'
+        version = f'⚙️ JerryBot v{self.getBotVersion()}'
 
-        await context.send(f'⚙️ JerryBot v{version}')
+        res = subprocess.run('git fetch && git status', stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True, shell=True)
+        if ('branch is up to date' not in res.stdout.decode('utf-8')):
+            version += ' (outdated)'
+
+        await context.send(version)
+
+    def getBotVersion(self) -> str:
+        """Gets the version of the bot."""
+
+        with open('VERSION', 'r', encoding='utf-8') as file:
+            return file.read().strip()
+
+    @commands.command(name='update')
+    async def update(self, context: Any):
+        """Trigger the parent server to update the bot."""
+
+        if (self.BOT_UTILS.isUserBotAdmin(str(context.author.id), self.DB_MANAGER)):
+            await self.BOT_UTILS.reactWithEmoteStr(context, '👍🏿')
+            await self.updateMethod()
+        else:
+            await self.BOT_UTILS.reactWithEmote(context, Emotes.BONK.value)

@@ -13,7 +13,7 @@ class DatabaseManager:
 
     def __init__(self, dbPath: str):
 
-        if (not dbPath.endswith('.db')):
+        if (not dbPath.endswith('.sqlite')):
             raise ValueError('Database path must end with .db extension.')
 
         # create the database file if it does not exist
@@ -32,7 +32,8 @@ class DatabaseManager:
 
     def __del__(self):
         self.DB_CONNECTION.close()
-        self.CACHE.close()
+        if (self.CACHE is not None):
+            self.CACHE.close()
 
     def storeInCache(self, cog: str, store: str, key: str, value: Any,
                      overwriteIfExists: bool = False, expandIfExists: bool = False, timeUntilExpire: int | None = None):

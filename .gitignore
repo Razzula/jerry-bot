@@ -1,8 +1,9 @@
 *.env
 *.db
+*.sqlite
+*.sql
 __pycache__
 
-steamIDs.txt
 .vscode
 .mypy_cache
 .pytest_cache
