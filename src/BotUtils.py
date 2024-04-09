@@ -4,6 +4,7 @@ from enum import Enum
 import os
 import random
 from datetime import datetime
+from dateutil.easter import easter
 import re
 from typing import Final, Any
 import discord
@@ -37,6 +38,9 @@ class Emotes(Enum):
     GB = Emote('gb-flag', '🇬🇧', ['gmt', 'bst', 'utc'])
     CH = Emote('ch-flag', '🇨🇭', ['cet', 'cest'])
 
+    # Other
+    WINDOWS = Emote('windows', '🪟', [])
+
     # Custom Emotes
     ALLIANCE = Emote('theAlliance', '<:theAlliance:899087916251353118>', ['alliance'], '�')
     DOUBT = Emote('doubt', '<:doubt:1084980452537937940>', ['doubt'], '🇽')
@@ -60,7 +64,10 @@ class BotUtils:
     def getActivity(self):
         """Determine the bot's activity and profile picture based on the current date."""
 
-        activity = 'Baba Yetu'
+        defaultActivity = 'Baba Yetu'
+        defaultActivityType = discord.ActivityType.listening
+
+        activity = None
 
         today = datetime.now()
         if (today.month == 12):  # DECEMBER (CHRISTMAS)
@@ -68,6 +75,7 @@ class BotUtils:
                 avatar = image.read()
 
             if (today.day <= 14):  # JINGLE JAM
+                activityType = discord.ActivityType.watching
                 activity = 'Jingle Jam'
             else:
                 activity = random.choice([
@@ -79,16 +87,54 @@ class BotUtils:
                     'White Christmas',
                     'Mariah Carey',
                 ])
+
         else:
             with open(os.path.join(self.STATIC_DATA_PATH ,'pfp/jerry.png'), 'rb') as image:
                 avatar = image.read()
 
-            if (today.month == 5 and today.day == 4):  # MAY THE 4TH
-                activity = 'Duel of the Fates'
-            elif (today.month == 2 and today.day == 14):  # VALENTIE'S DAY
+            if (today.month == 2 and today.day == 14):  # VALENTIE'S DAY
                 activity = 'Careless Whisper'
 
-        return activity, avatar
+            elif (today.month == 3 or today.month == 4):  # (possibly) EASTER
+                easterDate = easter(today.year)
+
+                if (today.month == easterDate.month  - 3 and today.day == easterDate.day - 3): # Maundy Thursday
+                    activityType = discord.ActivityType.competing
+                    activity = "The Last Supper"
+                elif (today.month == easterDate.month - 2 and today.day == easterDate.day - 2): # Good Friday
+                    activity = 'Too Small a Price'
+                elif (today.month == easterDate.month and today.day == easterDate.day): # Easter Sunday
+                    activity = "He's Alive"
+
+            if (today.month == 5): # MAY
+                if (today.day == 1):  # GLADIATOR RELEASE DATE
+                    activityType = discord.ActivityType.competing
+                    activity = 'gladitorial combat'
+                elif (today.day == 4):  # MAY THE 4TH BE WITH YOU
+                    activity = 'Duel of the Fates'
+
+            elif (today.month == 9 and today.day == 5):  # JERRY'S B(OT)IRTHDAY
+                activity = 'Happy Birthday'
+
+        if (activity is None):
+
+            if (today.weekday() == 6): # SUNDAY
+                activity = random.choice([
+                    'Amazing Grace',
+                    'Blessed Assurance',
+                    'Great Is Thy Faithfulness',
+                    'How Great Thou Art',
+                    'In Christ Alone',
+                    'It Is Well With My Soul',
+                    'When I Survey the Wondrous Cross',
+                    'Your Grace Is Enough',
+                    'Your Love Never Fails',
+                ])
+
+            else:
+                return defaultActivity, defaultActivityType, avatar
+
+        return activity, activityType, avatar
 
     def extractMentionsFromMessage(self, message: str) -> dict[str, list[str] | bool]:
         """Extracts mentions from a message."""

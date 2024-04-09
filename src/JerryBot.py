@@ -25,6 +25,8 @@ load_dotenv('tokens.env')
 DYNAMIC_DATA_PATH: Final[str] = 'data/dynamic/'
 STATIC_DATA_PATH: Final[str] = 'data/static/'
 
+PUNCTUATION_STRIPPER = str.maketrans('', '', '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~')
+
 class JerryBot:
     """Main class for the bot."""
 
@@ -176,7 +178,7 @@ class JerryCoreCog(CustomCog):
         await self.BOT.change_presence(status=discord.Status.do_not_disturb) # appear DND initially, whilst bot is setting up
 
         # ACTIVITY
-        activity, avatar = self.BOT_UTILS.getActivity()
+        activity, activityType, avatar = self.BOT_UTILS.getActivity()
 
         # profile picture
         if (not os.environ.get('DEBUG')):  # disable avatar change in debug mode, as excessive calls will result in a timeout
@@ -186,7 +188,11 @@ class JerryCoreCog(CustomCog):
                 self.LOGGER.warn('Avatar not changed: HTTPException')
         # presence
         await self.BOT.change_presence(
-            activity=discord.Activity(type=discord.ActivityType.listening, name=activity)
+            activity=discord.Activity(
+                status=discord.Status.online,
+                type=activityType,
+                name=activity
+            )
         )
 
         self.LOGGER.info('Ready.\n')
@@ -195,11 +201,12 @@ class JerryCoreCog(CustomCog):
     async def on_message(self, context: Any):
         """Reacts to messages sent to the bot."""
 
-        message: str = context.content.lower()  # removes case sensitivity
-        if (context.author == self.BOT.user):
+        if (context.author == self.BOT.user): # ignore self
             return
+        message: str = context.content.lower()  # removes case sensitivity
         if (message.startswith('http') or message.startswith('www.')):  # ignore links (GIFs)
             return
+        messageMin: str = message.translate(PUNCTUATION_STRIPPER) # removes punctuation
 
         # REACT
         for reaction in Emotes:
@@ -207,6 +214,11 @@ class JerryCoreCog(CustomCog):
                 if (prompt in message):
                     await self.BOT_UTILS.reactWithEmote(context, reaction.value)
                     break
+
+        # RESPOND
+            if ('what' in message and 'tell me' in message): # Andor
+                await context.reply('You wanna win and walk away?')
+                return
 
         # BIBLE REFERENCES
         references: list[list[str]] | None = self.BIBLE_API.getBibleReferences(message)
@@ -256,6 +268,10 @@ class JerryCoreCog(CustomCog):
                     return
 
             # RESPOND
+            if (messageMin in ['wait', 'but wait', 'wait a minute']):
+                await context.reply('Consider me waiting...')
+                return
+
             ## DANCE
             if ('dance' in message):
                 await self.BOT_UTILS.sendGIF(context.channel, random.choice(self.GIFS['dances']))

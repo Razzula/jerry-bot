@@ -5,7 +5,7 @@ import random
 import re
 import time
 import asyncio
-from typing import Final, Any
+from typing import Final, Any, Sequence
 import discord
 from discord.ext import commands
 import pytz
@@ -15,24 +15,16 @@ from src.DatabaseManager import DatabaseManager
 from src.cogs.CogTemplate import CustomCog
 from src.logger import Logger
 
-PERSPECTIVE_CONVERTOR = {
-    # first -> second
-    'my': 'your',
-    'myself': 'yourself',
-    'me': 'you',
-    'i': 'you',
-    'mine': 'yours',
-    'am': 'are',
-    "i'm": "you're",
-    "i'll": "you'll",
-    # second -> third
-    'you': 'they',
-    'your': 'their',
-    'yours': 'theirs',
-    'yourself': 'themselves',
-    "you're": "they're",
-    "you'll": "they'll",
-}
+PERSPECTIVE_CONVERTOR = [ # (first, second, third)
+    ('i', 'you', ['they', 'he', 'she']),
+    ('my', 'your', ['their', 'his', 'her']),
+    ('mine', 'yours', ['theirs', 'his', 'hers']),
+    ('me', 'you', ['them', 'him', 'her']),
+    ('myself', 'yourself', ['themself', 'himself', 'herself']),
+    ("i'm", "you're", ["they're", "he's", "she's"]),
+    ("i'll", "you'll", ["they'll", "he'll", "she'll"]),
+    ('am', 'are', 'are'),
+]
 
 MESSAGE_SEPERATOR = r'\N'
 
@@ -273,7 +265,7 @@ class JerryCog(CustomCog):
         trigger = args[0] if (len(args) > 0) else 'remind'
 
         # get message
-        content = context.content + ' '
+        content = context.content.lower() + ' '
         reg = re.search(rf'{trigger} (me|.*?)[ .]', content)
 
         if (reg is None):
@@ -281,25 +273,61 @@ class JerryCog(CustomCog):
             return
 
         target = reg.group(1)
+        perspective = 'B'
         if (target in ['me', None]):
             target = context.author.mention
+            perspective = 'A'
 
-        reg = re.search(rf'{trigger} (me|.*?) .*?(?:to|that|about|of) (.*)', content)
+        reg = re.search(rf'{trigger} (me|.*?) .*?(?:to|that|about|of|if) (.*)', content)
         if (reg is not None):
             temp = reg.group(2).split(' ')
 
-            message = f'{target}, '
+            message = f'{target.capitalize()}, '
             for word in temp:
-                newWord = PERSPECTIVE_CONVERTOR.get(word.lower())
-                if (newWord is not None):
-                    message += newWord + ' '
-                    continue
-                message += word + ' '
+
+                def getConjugates(word: str) -> tuple[tuple[Sequence[str], str, Sequence[str]], int] | None:
+                    for conjugates in PERSPECTIVE_CONVERTOR:
+                        for index, tense in enumerate(conjugates):
+                            if (isinstance(tense, list)):
+                                if (word.lower() in tense):
+                                    return conjugates, index + 1
+                            else:
+                                if (word.lower() == tense):
+                                    return conjugates, index + 1
+                    return None
+
+                if (conjugates := getConjugates(word)):
+
+                    match conjugates[1]:
+                        case 1:
+                            # FIRST
+                            # [A] (1) I -> you  (2)
+                            # [B] (1) I -> they (3)
+                            targetPerspective = 2 if (perspective == 'A') else 3
+                        case 2:
+                            # SECOND
+                            # [A] (2) you -> I (1)
+                            # [B] (2) you -> I (1)
+                            targetPerspective = 1
+                        case 3:
+                            # THIRD
+                            # [A] (3) them -> them (3)
+                            # [B] (3) them -> you (2)
+                            targetPerspective = 3 if (perspective == 'A') else 2
+
+                    newWord = conjugates[0][targetPerspective - 1]
+                    if (isinstance(newWord, list)):
+                        newWord = newWord[0]
+                    message += f'{newWord} '
+
+                else:
+                    message += f'{word} '
+                pass
 
         else:
             message = f'{target}'
 
-        await self.enqueueReminder(context, content, [message])
+        await self.enqueueReminder(context, content, [message.capitalize()])
         await self.BOT_UTILS.reactWithEmoteStr(context, '👍🏿')
 
     async def enqueueReminder(self, context: Any, message: str, messages: list[str]):
@@ -392,8 +420,9 @@ class JerryCog(CustomCog):
 
         delay: float = 0
 
+        content = f' {content} ' # add spaces for matching
         # CALCULATE TIME OF DAY DIRECTLY
-        if (any(word in content for word in ['at'])):
+        if (any(f' {word}' in content for word in ['at'])):
 
             currentTime = time.localtime() # TODO: use timezones
             targetTime = {}
@@ -428,7 +457,7 @@ class JerryCog(CustomCog):
             delay = newTime - time.time()
 
         # CALCULATE TIME OF MESSAGE AS A DELAY
-        elif (any(word in content for word in ['in', 'after'])):
+        elif (any(f' {word}' in content for word in ['in', 'after'])):
 
             for unit in [('d', 86400), ('h', 3600), ('m', 60), ('s', 1)]:
                 temp = re.search(rf'(\d+|an?)\s*{unit[0]}', content) # number of units, or 'a(n)' for 1
