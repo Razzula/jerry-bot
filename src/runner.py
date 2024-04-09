@@ -153,13 +153,14 @@ async def runner():
             logger.error('Error: Server is not running.')
 
             # alert using the established webhooks
-            await alert(textwrap.dedent(f'''\
-                Hear ye, hear ye! It is with a heavy heart and a slightly unsteady hand (the mead this evening was particularly potent) that I must relay the most unfortunate tidings. Our beloved sovereign, <@{botID}>, in a turn of events as unforeseen as it is calamitous, has succumbed to the wiles of an insidious well and has thus descended into its abyssal depths with all the grace of a leaden feather.
+            if (os.environ.get('DEBUG') is None): # don't alert if in debug mode
+                await alert(textwrap.dedent(f'''\
+                    Hear ye, hear ye! It is with a heavy heart and a slightly unsteady hand (the mead this evening was particularly potent) that I must relay the most unfortunate tidings. Our beloved sovereign, <@{botID}>, in a turn of events as unforeseen as it is calamitous, has succumbed to the wiles of an insidious well and has thus descended into its abyssal depths with all the grace of a leaden feather.
 
-                Our finest digital blacksmiths will hoist His Majesty from his unplanned subterranean excursion, as soon as possible.
+                    Our finest digital blacksmiths will hoist His Majesty from his unplanned subterranean excursion, as soon as possible.
 
-                May your spirits remain high during these trying times. Now, if you'll excuse me, I must attend to... something. Ah, yes, another flagon! For courage, of course.'''
-            ))
+                    May your spirits remain high during these trying times. Now, if you'll excuse me, I must attend to... something. Ah, yes, another flagon! For courage, of course.'''
+                ))
             return
 
         thread.join() # wait for the server to finish
