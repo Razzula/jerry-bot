@@ -38,19 +38,21 @@ class Emotes(Enum):
     GB = Emote('gb-flag', '🇬🇧', ['gmt', 'bst', 'utc'])
     CH = Emote('ch-flag', '🇨🇭', ['cet', 'cest'])
 
-    # Other
-    WINDOWS = Emote('windows', '🪟', [])
-
     # Custom Emotes
     ALLIANCE = Emote('theAlliance', '<:theAlliance:899087916251353118>', ['alliance'], '�')
     DOUBT = Emote('doubt', '<:doubt:1084980452537937940>', ['doubt'], '🇽')
     BEANS = Emote('beans', '<:beans:796047923711836210>', ['beans'], '🫘')
     BONK = Emote('bonk', '<:bonk:798539206901235773>', [], '👎🏿')
     EKKY_DISAPPROVES = Emote('ekky_disapproves', '<:ekkydisapproves:876951860144144454>', [], '👎🏿')
+    CARDBOARD = Emote('cardboard', '<:cardboard:1203077387345207448>', ['cardboard'], '📦')
 
     # Steam
     STEAM = Emote('steam', '<:steam:1042900928048681030>', ['steam'], '�')
     STEAM_BLACK = Emote('steam_black', '<:steam:1044305789554266162>', [], '�')
+
+    # Other
+    WINDOWS = Emote('windows', '🪟', [])
+    CHEESE = Emote('cheese', '🧀', ['cheese'])
 
 class BotUtils:
     """TODO"""
@@ -118,6 +120,9 @@ class BotUtils:
 
         if (activity is None):
 
+            if (today.weekday() == 4): # FRIDAY
+                activityType = discord.ActivityType.watching
+                activity = 'cardboard'
             if (today.weekday() == 6): # SUNDAY
                 activity = random.choice([
                     'Amazing Grace',

@@ -1,10 +1,12 @@
 # pylint: disable=fixme, line-too-long, invalid-name, superfluous-parens, trailing-whitespace, arguments-differ
 """Discord bot that responds to messages and commands."""
+import asyncio
+from datetime import datetime, timedelta
 import os
 import random
 import json
 import subprocess
-from typing import Final, Any, Sequence
+from typing import Final, Any, Sequence, Callable, Awaitable
 import logging
 from dotenv import load_dotenv
 import discord
@@ -177,6 +179,24 @@ class JerryCoreCog(CustomCog):
         self.LOGGER.info(f'Logged in as {self.BOT.user}\n')
         await self.BOT.change_presence(status=discord.Status.do_not_disturb) # appear DND initially, whilst bot is setting up
 
+        await self.setupBot()
+
+        self.LOGGER.info('Ready.\n')
+
+    async def scheduleTaskForNextHour(self, method: Callable[..., Awaitable[None]]):
+        """Schedules a task to run at the next hour."""
+
+        currentTime = datetime.now()
+        nextHour = (currentTime.replace(second=0, microsecond=0, minute=0) + timedelta(hours=1)).replace(tzinfo=currentTime.tzinfo)
+
+        delay = (nextHour - currentTime).total_seconds()
+        await asyncio.sleep(delay)
+
+        await method()
+
+    async def setupBot(self):
+        """Sets up the bot."""
+
         # ACTIVITY
         activity, activityType, avatar = self.BOT_UTILS.getActivity()
 
@@ -195,7 +215,7 @@ class JerryCoreCog(CustomCog):
             )
         )
 
-        self.LOGGER.info('Ready.\n')
+        asyncio.create_task(self.scheduleTaskForNextHour(self.setupBot))
 
     @commands.Cog.listener()
     async def on_message(self, context: Any):
