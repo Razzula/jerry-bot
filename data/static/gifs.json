@@ -1,6 +1,10 @@
 {
     "responses": [
         [
+            ["boat boi", "<@&795652203804360714>"],
+            "NavalSadness"
+        ],
+        [
             "where did you ",
             "OnAFarm"
         ],
@@ -143,6 +147,10 @@
         [
             "wrex",
             "WrexShepard"
+        ],
+        [
+            "try",
+            "DoOrDoNot"
         ],
         [
             ["going", "gonna", "must", "should"],
