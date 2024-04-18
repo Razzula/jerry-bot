@@ -76,6 +76,8 @@ class Server:
     def kill(self, status: ServerStatus = ServerStatus.RESTART):
         """Kill the FastAPI server."""
 
+        logger.info('Terminating server process...')
+
         self.process.send_signal(signal.SIGTERM)
         self.process.wait()
         self.status = status
@@ -146,7 +148,7 @@ async def runner():
         server.serve()
         thread.start()
 
-        await asyncio.sleep(10)
+        await asyncio.sleep(20)
         # then, perform a health check on the server
         connection, _ = await ping('http://localhost:8000/test')
         if (not connection):
