@@ -1,0 +1,18 @@
+[
+    {
+        "input": ["what", "tell me"],
+        "type": "AND",
+        "output": "You wanna win and walk away?"
+    },
+    {
+        "input": ["cardboard", "friday"],
+        "type": "AND",
+        "output": "Is this live?"
+    },
+    {
+        "input": ["wait", "but wait", "wait a minute"],
+        "type": "OR",
+        "strict": true,
+        "output": "Consider me waiting..."
+    }
+]

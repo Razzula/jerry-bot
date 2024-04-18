@@ -243,3 +243,37 @@ class BotUtils:
         ''')
 
         return (len(res) > 0)
+
+    def getFromComplexList(self, complexList: list[Any], message: str) -> str | None:
+        """Gets a list from a complex list."""
+
+        for entry in complexList:
+            prompts: list[str] | str = entry.get('input')
+            strict = entry.get('strict') if ('strict' in entry) else False
+
+            # single prompt
+            if (isinstance(prompts, str)):
+                if (prompts in message):
+                    return entry.get('output')
+
+            # multiple prompts
+            else:
+                if (entry.get('type') == 'AND'): # AND
+                    flag = True
+                    for prompt in prompts:
+                        if (not self.isSubstring(message, prompt, strict=strict)):
+                            flag = False
+                    if (flag):
+                        return entry.get('output')
+                else: # OR
+                    for prompt in prompts:
+                        if (self.isSubstring(message, prompt, strict=strict)):
+                            return entry.get('output')
+        return None
+
+    def isSubstring(self, string: str, substr: str, strict = False) -> bool:
+        """Checks if a string is a substring of another string."""
+
+        if (strict):
+            return substr == string
+        return substr in string

@@ -1,161 +1,175 @@
 {
     "responses": [
-        [
-            ["boat boi", "<@&795652203804360714>"],
-            "NavalSadness"
-        ],
-        [
-            "where did you ",
-            "OnAFarm"
-        ],
-        [
-            "ride",
-            "DidYouSayRide"
-        ],
-        [
-            "lotr bad",
-            "KeepYourForkedTongue"
-        ],
-        [
-            ["circadian", "sympathetic nerve", "rem ", "read a book"],
-            "GandalfReading"
-        ],
-        [
-            "mount",
-            "MountainsGandalf"
-        ],
-        [
-            "deforestation",
-            "Treebeard"
-        ],
-        [
-            "what'd you tell me",
-            "You wanna win and walk away?"
-        ],
-        [
-            ["for the alliance", "for the king", "long live the king"],
-            "Hoorah"
-        ],
-        [
-            ["documenta", "coffee"],
-            "JonFavreauShaking"
-        ],
-        [
-            ["small step", "little step"],
-            "RunningPenguin"
-        ],
-        [
-            "sea",
-            "TheSeaIsAlwaysRight"
-        ],
-        [
-            "rue",
-            "RueThisDay"
-        ],
-        [
-            "bronner",
-            "ThatIsWhatTheyUsedToCallMe"
-        ],
-        [
-            "hello there",
-            "GeneralKenobi"
-        ],
-        [
-            ["heretic", "heresy"],
-            "Heretic"
-        ],
-        [
-            ["traitor", "treason"],
-            "NayItWasHeresy"
-        ],
-        [
-            "vexor",
-            "WhyDidYouSayThatName"
-        ],
-        [
-            "jahan",
-            "TheWhiteWizard"
-        ],
-        [
-            "die",
-            "ThenIShallDieAsOneOfThem"
-        ],
-        [
-            "weevil",
-            "LesserOfTwoWeevils"
-        ],
-        [
-            " late",
-            "AWizardIsNeverLate"
-        ],
-        [
-            "i wish",
-            "SoDoAllWhoLiveToSeeSuchTimes"
-        ],
-        [
-            "one day",
-            "ButItIsNotThisDay"
-        ],
-        [
-            ["victor", "win", " ftw"],
-            "WeHaveVictory"
-        ],
-        [
-            "you have my ",
-            "AndMyAxe"
-        ],
-        [
-            "sand",
-            "IDontLikeSand"
-        ],
-        [
-            ["potato", "tater"],
-            "PoTaToes"
-        ],
-        [
-            "mein",
-            "TheyCallItEinMine"
-        ],
-        [
-            "mine",
-            "TheyCallItAMine"
-        ],
-        [
-            ["lift", "elevator"],
-            "TerrifiedHamsterMarine"
-        ],
-        [
-            ["frontflip", "front flip", "front-flip"],
-            "TRexFlip-Reversed"
-        ],
-        [
-            ["sbonc", "sponc"],
-            "SquashCourt"
-        ],
-        [
-            ["bonk bat", "bonketh bat"],
-            "StayDownFinalWarning"
-        ],
-        [
-            "flip",
-            "TRexFlip"
-        ],
-        [
-            "borg",
-            ["HesBeenMyFriendThroughManyDangers", "BreadGang"]
-        ],
-        [
-            "wrex",
-            "WrexShepard"
-        ],
-        [
-            "try",
-            "DoOrDoNot"
-        ],
-        [
-            ["going", "gonna", "must", "should"],
-            "WereItSoEasy"
-        ]
+        {
+            "input": ["boat boi", "<@&795652203804360714>"],
+            "type": "OR",
+            "output": "NavalSadness"
+        },
+        {
+            "input": ["where did ", "where'd "],
+            "output": "OnAFarm"
+        },
+        {
+            "input": "ride",
+            "output": "DidYouSayRide"
+        },
+        {
+            "input": "lotr bad",
+            "output": "KeepYourForkedTongue"
+        },
+        {
+            "input": ["circadian", "sympathetic nerve", "rem ", "read a book"],
+            "type": "OR",
+            "output": "GandalfReading"
+        },
+        {
+            "input": "mount",
+            "output": "MountainsGandalf"
+        },
+        {
+            "input": "deforestation",
+            "output": "Treebeard"
+        },
+        {
+            "input": "what'd you tell me",
+            "output": "You wanna win and walk away?"
+        },
+        {
+            "input": ["for the alliance", "for the king", "long live the king"],
+            "type": "OR",
+            "output": "Hoorah"
+        },
+        {
+            "input": ["documenta", "coffee"],
+            "type": "OR",
+            "output": "JonFavreauShaking"
+        },
+        {
+            "input": ["small step", "little step"],
+            "type": "OR",
+            "output": "RunningPenguin"
+        },
+        {
+            "input": "sea",
+            "output": "TheSeaIsAlwaysRight"
+        },
+        {
+            "input": "rue",
+            "output": "RueThisDay"
+        },
+        {
+            "input": "bronner",
+            "output": "ThatIsWhatTheyUsedToCallMe"
+        },
+        {
+            "input": "hello there",
+            "output": "GeneralKenobi"
+        },
+        {
+            "input": ["heretic", "heresy"],
+            "type": "OR",
+            "output": "Heretic"
+        },
+        {
+            "input": ["traitor", "treason"],
+            "type": "OR",
+            "output": "NayItWasHeresy"
+        },
+        {
+            "input": "vexor",
+            "output": "WhyDidYouSayThatName"
+        },
+        {
+            "input": "jahan",
+            "output": "TheWhiteWizard"
+        },
+        {
+            "input": "die",
+            "output": "ThenIShallDieAsOneOfThem"
+        },
+        {
+            "input": "weevil",
+            "output": "LesserOfTwoWeevils"
+        },
+        {
+            "input": " late",
+            "output": "AWizardIsNeverLate"
+        },
+        {
+            "input": "i wish",
+            "output": "SoDoAllWhoLiveToSeeSuchTimes"
+        },
+        {
+            "input": "one day",
+            "output": "ButItIsNotThisDay"
+        },
+        {
+            "input": ["victor", "win", " ftw"],
+            "type": "OR",
+            "output": "WeHaveVictory"
+        },
+        {
+            "input": "you have my ",
+            "output": "AndMyAxe"
+        },
+        {
+            "input": "sand",
+            "output": "IDontLikeSand"
+        },
+        {
+            "input": ["potato", "tater"],
+            "type": "OR",
+            "output": "PoTaToes"
+        },
+        {
+            "input": "mein",
+            "output": "TheyCallItEinMine"
+        },
+        {
+            "input": "mine",
+            "output": "TheyCallItAMine"
+        },
+        {
+            "input": ["lift", "elevator"],
+            "type": "OR",
+            "output": "TerrifiedHamsterMarine"
+        },
+        {
+            "input": ["frontflip", "front flip", "front-flip"],
+            "type": "OR",
+            "output": "TRexFlip-Reversed"
+        },
+        {
+            "input": ["sbonc", "sponc"],
+            "type": "OR",
+            "output": "SquashCourt"
+        },
+        {
+            "input": ["bonk bat", "bonketh bat"],
+            "type": "OR",
+            "output": "StayDownFinalWarning"
+        },
+        {
+            "input": "flip",
+            "output": "TRexFlip"
+        },
+        {
+            "input": "borg",
+            "output": ["HesBeenMyFriendThroughManyDangers", "BreadGang"]
+        },
+        {
+            "input": "wrex",
+            "output": "WrexShepard"
+        },
+        {
+            "input": "try",
+            "output": "DoOrDoNot"
+        },
+        {
+            "input": ["going", "gonna", "must", "should"],
+            "type": "OR",
+            "output": "WereItSoEasy"
+        }
     ],
     "summons": [
         "OathesYouHaveTaken",

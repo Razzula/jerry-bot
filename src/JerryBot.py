@@ -39,6 +39,8 @@ class JerryBot:
 
         with open(os.path.join(STATIC_DATA_PATH, 'gifs.json'), 'r', encoding='utf-8') as file:
             self.GIFS = json.load(file)
+        with open(os.path.join(STATIC_DATA_PATH, 'responses.json'), 'r', encoding='utf-8') as file:
+            self.RESPOSNES = json.load(file)
 
         self.LOGGER = Logger('BOT', level=logging.INFO)
 
@@ -53,7 +55,7 @@ class JerryBot:
         self.setupDatabase()
 
         # Cogs
-        self.JerryCoreCog = JerryCoreCog(self.BOT, self.LOGGER, self.BOT_UTILS, self.DB_MANAGER, self.BOT_ALIASES, self.GIFS, updateMethod)
+        self.JerryCoreCog = JerryCoreCog(self.BOT, self.LOGGER, self.BOT_UTILS, self.DB_MANAGER, self.BOT_ALIASES, self.GIFS, self.RESPOSNES, updateMethod)
         self.cogs = [
             JerryCog(self.BOT, self.LOGGER, self.BOT_UTILS, self.DB_MANAGER, self.GIFS),
             SteamCog(self.BOT, self.LOGGER, self.BOT_UTILS, self.DB_MANAGER, os.environ.get('STEAM_API_KEY')),
@@ -124,7 +126,7 @@ class JerryCoreCog(CustomCog):
     Provides basic functionality such as help, ping, and pong.
     """
 
-    def __init__(self, bot: commands.Bot, logger: Logger, botUtils: BotUtils, dbManager: DatabaseManager, botNames: list[str], gifs: dict[str, list[str]], updateMethod: Any):
+    def __init__(self, bot: commands.Bot, logger: Logger, botUtils: BotUtils, dbManager: DatabaseManager, botNames: list[str], gifs: dict[str, list[Any]], responses: dict[str, list[Any]], updateMethod: Any):
 
         self.LOGGER: Final[Logger] = logger
         self.DB_MANAGER: Final[DatabaseManager] = dbManager
@@ -142,7 +144,8 @@ class JerryCoreCog(CustomCog):
         self.BIBLE_API = BibleAPI(STATIC_DATA_PATH)
 
         self.BOT_ALIASES: Final[list[str]] = botNames
-        self.GIFS: Final[dict[str, list[str]]] = gifs
+        self.GIFS: Final[dict[str, Any]] = gifs
+        self.RESPONSES: Final[dict[str, str]] = responses
 
         self.helpList: list[dict[str, str | Sequence[str]]] = []
         self.loadedCogs: dict[str, CustomCog] = {}
@@ -236,9 +239,10 @@ class JerryCoreCog(CustomCog):
                     break
 
         # RESPOND
-            if ('what' in message and 'tell me' in message): # Andor
-                await context.reply('You wanna win and walk away?')
-                return
+        response = self.BOT_UTILS.getFromComplexList(self.RESPONSES, messageMin)
+        if (response is not None):
+            await context.reply(response)
+            return
 
         # BIBLE REFERENCES
         references: list[list[str]] | None = self.BIBLE_API.getBibleReferences(message)
@@ -287,25 +291,15 @@ class JerryCoreCog(CustomCog):
                         await context.channel.send("Hmm. I can't think of anything... 🤔")
                     return
 
-            # RESPOND
-            if (messageMin in ['wait', 'but wait', 'wait a minute']):
-                await context.reply('Consider me waiting...')
-                return
-
             ## DANCE
             if ('dance' in message):
                 await self.BOT_UTILS.sendGIF(context.channel, random.choice(self.GIFS['dances']))
                 return
 
-            ## GIFS
-            for response in self.GIFS['responses']:
-                if (isinstance(response[0], str)): # single prompt
-                    response[0] = [response[0]]
-
-                for prompt in response[0]:
-                    if (prompt in message):
-                        await self.BOT_UTILS.sendGIF(context.channel, response[1])
-                        return
+        ## GIFS
+        gif = self.BOT_UTILS.getFromComplexList(self.GIFS['responses'], message)
+        if (gif is not None):
+            await self.BOT_UTILS.sendGIF(context.channel, gif)
 
     @commands.command(name='ping')
     async def ping(self, context: Any):
