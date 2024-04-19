@@ -108,7 +108,7 @@ class BotUtils:
                 elif (today.month == easterDate.month and today.day == easterDate.day): # Easter Sunday
                     activity = "He's Alive"
 
-            if (today.month == 5): # MAY
+            elif (today.month == 5): # MAY
                 if (today.day == 1):  # GLADIATOR RELEASE DATE
                     activityType = discord.ActivityType.competing
                     activity = 'gladitorial combat'
@@ -123,7 +123,7 @@ class BotUtils:
             if (today.weekday() == 4): # FRIDAY
                 activityType = discord.ActivityType.watching
                 activity = 'cardboard'
-            if (today.weekday() == 6): # SUNDAY
+            elif (today.weekday() == 6): # SUNDAY
                 activity = random.choice([
                     'Amazing Grace',
                     'Blessed Assurance',

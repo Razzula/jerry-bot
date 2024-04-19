@@ -198,7 +198,7 @@ async def sendWebhook(webhookID: str, webhookToken: str, message: str):
 def update():
     """Update the server."""
 
-    subprocess.run(['git', 'pull'], check=True)
+    subprocess.run(['git', 'pull', '--no-rebase'], check=True)
     # TODO: pip install -r requirements.txt
     # really, this should use a bash script to do the update
 
