@@ -14,5 +14,13 @@
         "type": "OR",
         "strict": true,
         "output": "Consider me waiting..."
+    },
+    {
+        "input": "hang on",
+        "output": "Consider me hanging..."
+    },
+    {
+        "input": "hold on",
+        "output": "Hold on to what?"
     }
 ]

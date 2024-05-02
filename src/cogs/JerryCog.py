@@ -113,26 +113,31 @@ class JerryCog(CustomCog):
 
             if (temp is not None): # user has a reminder queued
                 for prompt in temp:
-                    channel = self.BOT.get_guild(prompt['guild']).get_channel(prompt['channel'])
-                    if (channel is not None):
+                    # TODO ensure this reminder is for the current guild
+                    # if the bot and user are in multiple guilds, the bot could react to this oresence change multiple times
+                    if (prompt['guild'] == userAfter.guild.id):
 
-                        message = await channel.fetch_message(prompt['message'])
-                        if (message is not None):
-                            timeTaken = (datetime.datetime.now(message.created_at.tzinfo) - message.created_at).total_seconds()
+                        channel = self.BOT.get_guild(prompt['guild']).get_channel(prompt['channel'])
+                        if (channel is not None):
 
-                            if (timeTaken < 120): # 2 minutes
-                                gifName = 'HeIsHere'
-                            elif (timeTaken > 3600): # 1 hour
-                                gifName = "You'reLate"
-                            else:
-                                continue
+                            message = await channel.fetch_message(prompt['message'])
+                            if (message is not None):
+                                timeTaken = (datetime.datetime.now(message.created_at.tzinfo) - message.created_at).total_seconds()
 
-                            try:
-                                await message.reply(self.BOT_UTILS.getGIF(gifName))
-                            except discord.NotFound:
-                                await channel.send(self.BOT_UTILS.getGIF(gifName))
+                                if (timeTaken < 120): # 2 minutes
+                                    gifName = 'HeIsHere'
+                                elif (timeTaken > 3600): # 1 hour
+                                    gifName = "You'reLate"
+                                else:
+                                    self.DB_MANAGER.removeFromCache(self.COG_NAME, 'presenceWaitlist', str(userAfter.id))
+                                    continue
 
-                self.DB_MANAGER.removeFromCache(self.COG_NAME, 'presenceWaitlist', str(userAfter.id))
+                                try:
+                                    await message.reply(self.BOT_UTILS.getGIF(gifName))
+                                except discord.NotFound:
+                                    await channel.send(self.BOT_UTILS.getGIF(gifName))
+
+                        self.DB_MANAGER.removeFromCache(self.COG_NAME, 'presenceWaitlist', str(userAfter.id))
 
     @commands.command(name='party')
     async def dance(self, context: Any):
@@ -460,7 +465,7 @@ class JerryCog(CustomCog):
         elif (any(f' {word}' in content for word in ['in', 'after'])):
 
             for unit in [('d', 86400), ('h', 3600), ('m', 60), ('s', 1)]:
-                temp = re.search(rf'(\d+|an?)\s*{unit[0]}', content) # number of units, or 'a(n)' for 1
+                temp = re.search(rf'(\d+|an? )\s*{unit[0]}', content) # number of units, or 'a(n)' for 1
 
                 if (temp is not None):
                     a = temp.group(1)
