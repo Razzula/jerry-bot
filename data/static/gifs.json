@@ -166,6 +166,10 @@
             "output": "DoOrDoNot"
         },
         {
+            "input": "remember",
+            "output": "Remember"
+        },
+        {
             "input": ["going", "gonna", "must", "should"],
             "type": "OR",
             "output": "WereItSoEasy"
@@ -191,7 +195,9 @@
         "SkyrimDragonGlitch",
         "GollumFlail",
         "PotatoDance",
-        "ESODance"
+        "ESODance",
+        "GandalfSax",
+        "GandalfParty"
     ],
     "bonks" : [
         "BonkMega",
