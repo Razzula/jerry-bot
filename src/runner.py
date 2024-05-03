@@ -23,6 +23,7 @@ logger = Logger('RUNNER')
 
 DYNAMIC_DATA_PATH: Final[str] = 'data/dynamic/'
 DISCORD_BOT_TOKEN = os.environ.get('DISCORD_BOT_TOKEN')
+SERVER_PORT = os.environ.get('SERVER_PORT') or '8000'
 
 DB_MANAGER = DatabaseManager(os.path.join(DYNAMIC_DATA_PATH, 'global.sqlite'))
 
@@ -68,7 +69,7 @@ class Server:
 
         python = 'python3' if (platform.system() == 'Linux') else 'python'
 
-        command = [python, '-m', 'uvicorn', 'src.server:server', '--host', '0.0.0.0', '--port', '8000']
+        command = [python, '-m', 'uvicorn', 'src.server:server', '--host', '0.0.0.0', '--port', SERVER_PORT]
         if (self.DEBUG_MODE):
             command.append('--reload')
         self.process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1, universal_newlines=True)
@@ -148,7 +149,7 @@ async def runner():
 
         await asyncio.sleep(10)
         # then, perform a health check on the server
-        connection, _ = await ping('http://localhost:8000/test')
+        connection, _ = await ping(f'http://localhost:{SERVER_PORT}/test')
         if (not connection):
             logger.error('Error: Server is not running.')
 

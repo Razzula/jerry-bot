@@ -33,7 +33,7 @@ async def startupEvent():
     global bot
 
     if ((TOKEN := os.environ.get('DISCORD_BOT_TOKEN')) is not None):
-        bot = await JerryBot.create(update)
+        bot = await JerryBot.create()
         asyncio.create_task(bot.run(TOKEN))
     else:
         LOGGER.error('Error: No token found')

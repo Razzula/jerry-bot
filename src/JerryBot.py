@@ -11,6 +11,7 @@ import logging
 from dotenv import load_dotenv
 import discord
 from discord.ext import commands
+import httpx
 
 from src.BotUtils import BotUtils, Emotes
 from src.DatabaseManager import DatabaseManager
@@ -34,7 +35,7 @@ class JerryBot:
 
     BOT_ALIASES = ['jerry', 'jezza', 'jeyry']
 
-    def __init__(self, updateMethod: Any):
+    def __init__(self: Any):
         """Constructor for the bot."""
 
         with open(os.path.join(STATIC_DATA_PATH, 'gifs.json'), 'r', encoding='utf-8') as file:
@@ -55,7 +56,7 @@ class JerryBot:
         self.setupDatabase()
 
         # Cogs
-        self.JerryCoreCog = JerryCoreCog(self.BOT, self.LOGGER, self.BOT_UTILS, self.DB_MANAGER, self.BOT_ALIASES, self.GIFS, self.RESPOSNES, updateMethod)
+        self.JerryCoreCog = JerryCoreCog(self.BOT, self.LOGGER, self.BOT_UTILS, self.DB_MANAGER, self.BOT_ALIASES, self.GIFS, self.RESPOSNES)
         self.cogs = [
             JerryCog(self.BOT, self.LOGGER, self.BOT_UTILS, self.DB_MANAGER, self.GIFS),
             SteamCog(self.BOT, self.LOGGER, self.BOT_UTILS, self.DB_MANAGER, os.environ.get('STEAM_API_KEY')),
@@ -63,10 +64,10 @@ class JerryBot:
         ]
 
     @classmethod
-    async def create(cls, updateMethod: Any):
+    async def create(cls: Any):
         """Asynchronously creates a bot instance (supports loading cogs)."""
 
-        bot = cls(updateMethod)
+        bot = cls()
         await bot.loadCogs()
         return bot
 
@@ -126,7 +127,7 @@ class JerryCoreCog(CustomCog):
     Provides basic functionality such as help, ping, and pong.
     """
 
-    def __init__(self, bot: commands.Bot, logger: Logger, botUtils: BotUtils, dbManager: DatabaseManager, botNames: list[str], gifs: dict[str, list[Any]], responses: dict[str, list[Any]], updateMethod: Any):
+    def __init__(self, bot: commands.Bot, logger: Logger, botUtils: BotUtils, dbManager: DatabaseManager, botNames: list[str], gifs: dict[str, list[Any]], responses: dict[str, list[Any]]):
 
         self.LOGGER: Final[Logger] = logger
         self.DB_MANAGER: Final[DatabaseManager] = dbManager
@@ -138,7 +139,6 @@ class JerryCoreCog(CustomCog):
         ])
 
         self.BOT: Final[commands.Bot] = bot
-        self.updateMethod: Final[Any] = updateMethod
 
         self.BOT_UTILS: Final[BotUtils] = botUtils
         self.BIBLE_API = BibleAPI(STATIC_DATA_PATH)
@@ -384,6 +384,21 @@ class JerryCoreCog(CustomCog):
 
         if (self.BOT_UTILS.isUserBotAdmin(str(context.author.id), self.DB_MANAGER)):
             await self.BOT_UTILS.reactWithEmoteStr(context, '👍🏿')
-            await self.updateMethod()
+            # TODO maybe pinging the update endpoint would work on the RPi
+            port = os.environ.get('SERVER_PORT') or '8000'
+            headers = {}
+
+            if ((auth := os.environ.get('SERVER_AUTH_TOKEN')) is not None):
+                headers['Authorization'] = f'Bearer {auth}'
+
+            async with httpx.AsyncClient() as client:
+                try:
+                    response = await client.get(f'http://localhost:{port}/update', headers=headers)
+                    if (response.status_code == 200):
+                        return
+                    else:
+                        await self.BOT_UTILS.reactWithEmoteStr(context, '👎🏿')
+                except httpx.RequestError:
+                    await self.BOT_UTILS.reactWithEmoteStr(context, '👎🏿')
         else:
             await self.BOT_UTILS.reactWithEmote(context, Emotes.BONK.value)

@@ -11,7 +11,7 @@ def update():
 
 async def start():
     if ((TOKEN := os.environ.get('DISCORD_BOT_TOKEN')) is not None):
-        bot = await JerryBot.create(update)
+        bot = await JerryBot.create()
         await bot.run(TOKEN)
 
 asyncio.run(start())
