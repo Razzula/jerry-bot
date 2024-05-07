@@ -170,6 +170,10 @@
             "output": "Remember"
         },
         {
+            "input": "no wo",
+            "output": ["HakunaMatata_1", "HakunaMatata_2", "HakunaMatata_3"]
+        },
+        {
             "input": ["going", "gonna", "must", "should"],
             "type": "OR",
             "output": "WereItSoEasy"
