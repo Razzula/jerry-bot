@@ -115,7 +115,7 @@ class BibleAPI:
         """Return a compartmenalised 'USFM' object of a Bible reference string."""
 
         match = re.search(
-            r'(I+|[123]+)?\s*([A-Za-z]+)\.? *(\d+)(?::\s*(\d+)(?:\s*-\s*(\d+))?|-(\d+))?(?:.*?([;,].*))?',
+            r'(I+ |[123]+)?\s*([A-Za-z]+)\.? *(\d+)(?::\s*(\d+)(?:\s*-\s*(\d+))?|-(\d+))?(?:.*?([;,].*))?',
             reference.upper(),
         )
         # 1: book number (optional)             III
