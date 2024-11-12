@@ -102,7 +102,7 @@ All right, I've been thinking, when life gives you lemons, don't make lemonade! 
 But link sayd free robux
 Every triangle is a love triangle when you love triangles.
 Never spend 6 minutes doing something by hand when you can spend 6 hours failing to automate it.
-https://github.com/Razzula/jerry-bot/blob/main/data/static/images/ImportantGraph.png
+https://raw.githubusercontent.com/Razzula/jerry-bot/refs/heads/main/data/static/images/ImportantGraph.png
 
 IN CASE OF FIRE DO **NOT** USE THE ELEVATOR
 There is no elevator to success, you have to take the stairs.
