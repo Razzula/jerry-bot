@@ -22,5 +22,17 @@
     {
         "input": "hold on",
         "output": "Hold on to what?"
+    },
+    {
+        "input": ["i think", "we think"],
+        "output": "Know, or know not. There is no think."
+    },
+    {
+        "input": "you think",
+        "output": "I think, therefore I am."
+    },
+    {
+        "input": ["i assume", "we assume"],
+        "output": "Assume me and you'll become a donkey."
     }
 ]

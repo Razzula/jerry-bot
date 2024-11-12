@@ -1,6 +1,10 @@
 {
     "responses": [
         {
+            "input": "for jerry",
+            "output": "ForJerry!"
+        },
+        {
             "input": ["boat boi", "<@&795652203804360714>"],
             "type": "OR",
             "output": "NavalSadness"
@@ -76,7 +80,7 @@
             "output": "NayItWasHeresy"
         },
         {
-            "input": "vexor",
+            "input": ["vexor", "lion king 2019"],
             "output": "WhyDidYouSayThatName"
         },
         {
@@ -168,6 +172,10 @@
         {
             "input": "remember",
             "output": "Remember"
+        },
+        {
+            "input": ["meat", "meet"],
+            "output": "MeatsBackOnTheMenu"
         },
         {
             "input": "no wo",
