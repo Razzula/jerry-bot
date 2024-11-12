@@ -154,6 +154,11 @@
             "output": "StayDownFinalWarning"
         },
         {
+            "input": ["beep", "prep"],
+            "type": "OR",
+            "output": "BePrepared"
+        },
+        {
             "input": "flip",
             "output": "TRexFlip"
         },
@@ -222,5 +227,12 @@
         "CaptainAmericaSitDown",
         "HeIsNotOneOfUs",
         "DeceptionDisgrace"
+    ],
+    "highfives": [
+        "HighFivePawsome",
+        "HighFiveFish"
+    ],
+    "hugs": [
+
     ]
 }

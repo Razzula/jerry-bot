@@ -291,6 +291,20 @@ class JerryCoreCog(CustomCog):
                         await context.channel.send("Hmm. I can't think of anything... 🤔")
                     return
 
+                ## HIGH FIVES
+                if ('high' in message and 'five' in message):
+                    if (self.GIFS):
+                        await self.DB_MANAGER.storeInCache('JerryBot', 'highfives', str(context.author.id), context.channel.id, timeUntilExpire=3)
+                        await asyncio.sleep(3)
+                        await self.BOT_UTILS.sendGIF(context.channel, random.choice(self.GIFS['highfives']))
+                    else:
+                        self.LOGGER.error('Error: gifs.json is blank')
+                    return
+                elif ('too slow' in message):
+                    if (self.DB_MANAGER.getFromCache('JerryBot', 'highfives', str(context.author.id)) == context.channel.id):
+                        await self.BOT_UTILS.sendGIF(context.channel, 'TooSlow')
+                    return
+
             ## DANCE
             if ('dance' in message):
                 await self.BOT_UTILS.sendGIF(context.channel, random.choice(self.GIFS['dances']))

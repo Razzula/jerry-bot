@@ -34,5 +34,9 @@
     {
         "input": ["i assume", "we assume"],
         "output": "Assume me and you'll become a donkey."
+    },
+    {
+        "input": "prep",
+        "output": "***BEEP REPAAAAIR***"
     }
 ]
