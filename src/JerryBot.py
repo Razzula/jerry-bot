@@ -291,24 +291,38 @@ class JerryCoreCog(CustomCog):
                         await context.channel.send("Hmm. I can't think of anything... 🤔")
                     return
 
-                ## HIGH FIVES
-                if ('high' in message and 'five' in message):
-                    if (self.GIFS):
-                        await self.DB_MANAGER.storeInCache('JerryBot', 'highfives', str(context.author.id), context.channel.id, timeUntilExpire=3)
-                        await asyncio.sleep(3)
-                        await self.BOT_UTILS.sendGIF(context.channel, random.choice(self.GIFS['highfives']))
-                    else:
-                        self.LOGGER.error('Error: gifs.json is blank')
-                    return
-                elif ('too slow' in message):
-                    if (self.DB_MANAGER.getFromCache('JerryBot', 'highfives', str(context.author.id)) == context.channel.id):
-                        await self.BOT_UTILS.sendGIF(context.channel, 'TooSlow')
-                    return
-
             ## DANCE
             if ('dance' in message):
                 await self.BOT_UTILS.sendGIF(context.channel, random.choice(self.GIFS['dances']))
                 return
+
+            ## HIGH FIVES
+            if ('high' in message and 'five' in message):
+                if (self.GIFS):
+                    delay = random.randint(0, 2)
+
+                    self.DB_MANAGER.storeInCache('JerryBot', 'highfives', str(context.author.id), context.channel.id, timeUntilExpire=delay)
+                    await asyncio.sleep(delay)
+
+                    tooSlow = self.DB_MANAGER.getFromCache('JerryBot', 'tooslow', str(context.author.id))
+                    if (tooSlow is not None and tooSlow[0] == context.channel.id):
+                        return # cancel high-five, as user has 'too slowed' Jerry
+                    await self.BOT_UTILS.sendGIF(context.channel, random.choice(self.GIFS['highfives']))
+                    self.DB_MANAGER.storeInCache('JerryBot', 'toofast', str(context.author.id), context.channel.id, timeUntilExpire=3)
+                else:
+                    self.LOGGER.error('Error: gifs.json is blank')
+                return
+            elif ('too slow' in message):
+                highFive = self.DB_MANAGER.getFromCache('JerryBot', 'highfives', str(context.author.id))
+                if (highFive is not None and highFive[0] == context.channel.id):
+                    self.DB_MANAGER.storeInCache('JerryBot', 'tooslow', str(context.author.id), context.channel.id, timeUntilExpire=3)
+                    await self.BOT_UTILS.sendGIF(context.channel, 'TooSlow')
+                    return
+
+                tooFast = self.DB_MANAGER.getFromCache('JerryBot', 'toofast', str(context.author.id))
+                if (tooFast is not None and tooFast[0] == context.channel.id):
+                    await self.BOT_UTILS.sendGIF(context.channel, 'IKnowYouAre')
+                    return
 
         ## GIFS
         gif = self.BOT_UTILS.getFromComplexList(self.GIFS['responses'], message)
