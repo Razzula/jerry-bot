@@ -21,6 +21,7 @@ from src.cogs.CogTemplate import CustomCog
 from src.cogs.JerryCog import JerryCog
 from src.cogs.SteamCog import SteamCog
 from src.cogs.TagCog import TagCog
+from src.cogs.NerdBotCog import NerdBotCog
 from src.logger import Logger
 
 load_dotenv('tokens.env')
@@ -61,6 +62,7 @@ class JerryBot:
             JerryCog(self.BOT, self.LOGGER, self.BOT_UTILS, self.DB_MANAGER, self.GIFS),
             SteamCog(self.BOT, self.LOGGER, self.BOT_UTILS, self.DB_MANAGER, os.environ.get('STEAM_API_KEY')),
             TagCog(self.BOT, self.LOGGER, self.BOT_UTILS, self.GIFS),
+            NerdBotCog(self.BOT, self.LOGGER, self.BOT_UTILS, self.GIFS),
         ]
 
     @classmethod
@@ -171,8 +173,10 @@ class JerryCoreCog(CustomCog):
     async def callCommand(self, cogName: str, command: Any, context: Any, *args):
         """Calls a command from a cog."""
 
+        arg = args[0] if args else None
+
         if ((cog := self.loadedCogs.get(cogName)) is not None):
-            await command(cog, context, args[0])
+            await command(cog, context, arg)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -292,9 +296,10 @@ class JerryCoreCog(CustomCog):
                     return
 
             ## DANCE
-            if ('dance' in message):
-                await self.BOT_UTILS.sendGIF(context.channel, random.choice(self.GIFS['dances']))
-                return
+            for trigger in ['dance', 'party', 'boogie', 'whoop']:
+                if (trigger in message):
+                    await self.callCommand('JerryCog', JerryCog.dance, context)
+                    return
 
             ## HIGH FIVES
             if ('high' in message and 'five' in message):
@@ -328,6 +333,12 @@ class JerryCoreCog(CustomCog):
         gif = self.BOT_UTILS.getFromComplexList(self.GIFS['responses'], message)
         if (gif is not None):
             await self.BOT_UTILS.sendGIF(context.channel, gif)
+            return
+
+        ## HUGS
+        if ('hug' in message):
+            await self.callCommand('JerryCog', JerryCog.hug, context)
+            return
 
     @commands.command(name='ping')
     async def ping(self, context: Any):
@@ -351,7 +362,12 @@ class JerryCoreCog(CustomCog):
 
         if (arg is None): # list commands
             embed = discord.Embed(
-                title='What can men do against such reckless hate?',
+                title=random.choice([
+                    'What can men do against such reckless hate?',
+                    'Legolas, what do your elf eyes see?',
+                    'Do you know what you\'re doing, kid?',
+                    'You think you know how the world works?',
+                ]),
                 color=discord.Color.red()
             )
 

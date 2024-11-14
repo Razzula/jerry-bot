@@ -1,5 +1,5 @@
 # pylint: disable=fixme, line-too-long, invalid-name, superfluous-parens, trailing-whitespace, arguments-differ, import-not-found
-"""TODO ..."""
+"""Main (not core) cog for the bot."""
 import datetime
 import random
 import re
@@ -8,7 +8,6 @@ import asyncio
 from typing import Final, Any, Sequence
 import discord
 from discord.ext import commands
-import pytz
 
 from src.BotUtils import BotUtils, Emotes, Emote
 from src.DatabaseManager import DatabaseManager
@@ -29,7 +28,11 @@ PERSPECTIVE_CONVERTOR = [ # (first, second, third)
 MESSAGE_SEPERATOR = r'\N'
 
 class JerryCog(CustomCog):
-    """TODO"""
+    """
+    Main (not core) cog for the bot.
+
+    Provides all of the Jerry-isms that we know and love.
+    """
 
     def __init__(self, bot: commands.Bot, logger: Logger, botUtils: BotUtils, dbManager: DatabaseManager, gifs: dict[str, list[str]]):
 
@@ -37,7 +40,9 @@ class JerryCog(CustomCog):
         self.DB_MANAGER: Final[DatabaseManager] = dbManager
 
         super().__init__('JerryCog', logger, [
-            { 'aliases': ['party'], 'short': 'party', 'icon': '🎉', 'description': 'I like to move it, move it 🦝' },
+            { 'aliases': ['party', 'boogie', 'celebrate', 'whoop'], 'short': 'party', 'icon': '🎉', 'description': 'I like to move it, move it 🦝' },
+            { 'aliases': ['hug'], 'short': 'hug', 'icon': '🤗', 'description': 'Sometimes a hug is all you need to make you feel better.' },
+            { 'aliases': ['highfive'], 'short': 'highfive', 'icon': '👏', 'description': 'Gimme five. (Don\'t be too slow!)' },
             { 'aliases': ['pick', 'choose', 'select'], 'short': 'pick `a`,`b`,...', 'icon': '❔', 'description': 'Randomly select a choice from a list of options (or does it just return the first one? I can never remember).' },
             { 'aliases': ['roll'], 'short': 'roll `n`', 'icon': '🎲', 'description': 'Roll a d`n` die.' },
             { 'aliases': ['bonk'], 'short': 'bonk `@`', 'icon': Emotes.BONK.value.emote, 'description': 'Punish a user with a bonk, and send them to bonk-jail.' },
@@ -140,10 +145,16 @@ class JerryCog(CustomCog):
                         self.DB_MANAGER.removeFromCache(self.COG_NAME, 'presenceWaitlist', str(userAfter.id))
 
     @commands.command(name='party')
-    async def dance(self, context: Any):
+    async def dance(self, context: Any, *_args):
         """Sends a random dance GIF."""
 
         await self.BOT_UTILS.sendGIF(context.channel, random.choice(self.GIFS['dances']))
+
+    @commands.command(name='hug')
+    async def hug(self, context: Any, *_args):
+        """Sends a random hug GIF."""
+
+        await self.BOT_UTILS.sendGIF(context.channel, random.choice(self.GIFS['hugs']))
 
     @commands.command(name='pick', pass_context=True, aliases=['choose', 'select'])
     async def pick(self, context: Any, *, arg: str | None) -> None:
@@ -263,6 +274,14 @@ class JerryCog(CustomCog):
 
         else:  # no user specified
             await self.BOT_UTILS.reactWithEmoteStr(context, '❓')
+
+    @commands.command(name='insult')
+    async def insult(self, context: Any):
+        """Become vengeance, be the night."""
+        # NerdBot has an !insult command, that generates a random insult.
+        # Detect if this is triggered, and if so, respond with an insult of NerdBot.
+
+        await self.BOT_UTILS.sendGIF(context.channel, random.choice(self.GIFS['hugs']))
 
     async def setReminder(self, context: Any, *args):
         """TODO"""

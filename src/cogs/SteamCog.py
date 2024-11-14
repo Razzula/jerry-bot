@@ -3,14 +3,13 @@
 import datetime
 import random
 from typing import Final, Any
-import json
 from discord.ext import commands
 from discord import Embed, Color, ButtonStyle
 from discord.ui import Button, View
 
 from src.apis.steamAPI import SteamAPI, SteamTags
 
-from src.BotUtils import BotUtils, Emotes, Emote
+from src.BotUtils import BotUtils, Emotes
 from src.DatabaseManager import DatabaseManager
 from src.cogs.CogTemplate import CustomCog
 
@@ -21,9 +20,10 @@ RETRY_EMOJI: Final[str] = '🔁'
 class SteamCog(CustomCog):
     """TODO"""
 
-    def __init__(self, bot: commands.Bot, logger: Logger, botUtils: BotUtils, dbManager: DatabaseManager, steamAPIKey: str):
+    def __init__(self, bot: commands.Bot, logger: Logger, botUtils: BotUtils, dbManager: DatabaseManager, steamAPIKey: str | None):
 
         self.DB_MANAGER: Final[DatabaseManager] = dbManager
+        self.LOGGER = logger
 
         super().__init__('SteamCog', logger, [
             { 'aliases': ['game'], 'short': 'game', 'icon': Emotes.STEAM.value.emote, 'description': 'Select a game to play from your Steam library. If you are in a voice channel, it will select a shared game among all active users.' },
@@ -35,7 +35,10 @@ class SteamCog(CustomCog):
         self.BOT: Final[commands.Bot] = bot
         self.BOT_UTILS: Final[BotUtils] = botUtils
 
-        self.STEAM_API: Final[SteamAPI] = SteamAPI(steamAPIKey)
+        if (steamAPIKey is not None):
+            self.STEAM_API: Final[SteamAPI] = SteamAPI(steamAPIKey)
+        else:
+            self.LOGGER.warn('Steam API key not provided. SteamCog will not work.')
 
     def setupDatabase(self):
         """TODO"""

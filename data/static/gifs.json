@@ -163,6 +163,10 @@
             "output": "TRexFlip"
         },
         {
+            "input": "venge",
+            "output": "Vengeance"
+        },
+        {
             "input": "borg",
             "output": ["HesBeenMyFriendThroughManyDangers", "BreadGang"]
         },
@@ -239,6 +243,10 @@
         "HighFiveFish"
     ],
     "hugs": [
-
+        "PenguinHug",
+        "VirtualHug",
+        "CatsHug",
+        "BearsHug",
+        "MagnetHug"
     ]
 }
