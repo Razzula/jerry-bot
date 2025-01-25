@@ -194,6 +194,14 @@
             "input": ["going", "gonna", "must", "should"],
             "type": "OR",
             "output": "WereItSoEasy"
+        },
+        {
+            "input": "poo",
+            "output": "GollumToilet"
+        },
+        {
+            "input": "jerry?",
+            "output": "GandalfReturns"
         }
     ],
     "summons": [

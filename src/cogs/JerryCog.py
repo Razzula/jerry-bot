@@ -251,6 +251,12 @@ class JerryCog(CustomCog):
         else:  # no user specified
             await self.BOT_UTILS.reactWithEmoteStr(context, '❓')
 
+    @commands.command(name='appear', pass_context=True)
+    async def appear(self, context: Any, *args):
+        """Comes back to you, at the turn of the tide..."""
+        await self.BOT_UTILS.sendGIF(context.channel, 'GandalfReturns')
+        await context.message.delete()
+
     @commands.command(name='summon', pass_context=True)
     async def summon(self, context: Any, *args):
         """Summons a user or role to the current channel."""
@@ -274,14 +280,6 @@ class JerryCog(CustomCog):
 
         else:  # no user specified
             await self.BOT_UTILS.reactWithEmoteStr(context, '❓')
-
-    @commands.command(name='insult')
-    async def insult(self, context: Any):
-        """Become vengeance, be the night."""
-        # NerdBot has an !insult command, that generates a random insult.
-        # Detect if this is triggered, and if so, respond with an insult of NerdBot.
-
-        await self.BOT_UTILS.sendGIF(context.channel, random.choice(self.GIFS['hugs']))
 
     async def setReminder(self, context: Any, *args):
         """TODO"""
