@@ -187,6 +187,10 @@
             "output": "MeatsBackOnTheMenu"
         },
         {
+            "input": "tea",
+            "output": "JustTeaThankYou"
+        },
+        {
             "input": "no wo",
             "output": ["HakunaMatata_1", "HakunaMatata_2", "HakunaMatata_3"]
         },
