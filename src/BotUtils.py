@@ -70,6 +70,7 @@ class BotUtils:
         defaultActivityType = discord.ActivityType.listening
 
         activity = None
+        activityType = None
 
         today = datetime.now()
         if (today.month == 12):  # DECEMBER (CHRISTMAS)
@@ -100,10 +101,10 @@ class BotUtils:
             elif (today.month == 3 or today.month == 4):  # (possibly) EASTER
                 easterDate = easter(today.year)
 
-                if (today.month == easterDate.month  - 3 and today.day == easterDate.day - 3): # Maundy Thursday
+                if (today.month == easterDate.month and today.day == easterDate.day - 3): # Maundy Thursday
                     activityType = discord.ActivityType.competing
                     activity = "The Last Supper"
-                elif (today.month == easterDate.month - 2 and today.day == easterDate.day - 2): # Good Friday
+                elif (today.month == easterDate.month and today.day == easterDate.day - 2): # Good Friday
                     activity = 'Too Small a Price'
                 elif (today.month == easterDate.month and today.day == easterDate.day): # Easter Sunday
                     activity = "He's Alive"
@@ -138,6 +139,11 @@ class BotUtils:
 
             else:
                 return defaultActivity, defaultActivityType, avatar
+
+        if (activity is None):
+            activity = defaultActivity
+        if (activityType is None):
+            activityType = defaultActivityType
 
         return activity, activityType, avatar
 
