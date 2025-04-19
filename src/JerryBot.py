@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 import discord
 from discord.ext import commands
 import httpx
+import re
 
 from src.BotUtils import BotUtils, Emotes
 from src.DatabaseManager import DatabaseManager
@@ -256,6 +257,11 @@ class JerryCoreCog(CustomCog):
                 for chunk in reference[1]:
                     await context.channel.send(f'> {chunk}')
             return
+
+        # COLOURS
+        hexhash = re.findall(r"#([0-9a-fA-F]{3,8})", message)
+        if (hexhash):
+            await context.reply(f'https://www.colorhexa.com/{hexhash[0]}.png')
 
         # SOFT COMMANDS
 
