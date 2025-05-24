@@ -245,8 +245,10 @@ class JerryCoreCog(CustomCog):
 
         # RESPOND
         response = self.BOT_UTILS.getFromComplexList(self.RESPONSES, messageMin)
-        if (response is not None):
-            await context.reply(response)
+        if (response is not None and len(response) > 0):
+            await context.reply(response[0])
+            for chunk in response[1:]:
+                await context.channel.send(chunk)
             return
 
         # BIBLE REFERENCES
@@ -337,8 +339,9 @@ class JerryCoreCog(CustomCog):
 
         ## GIFS
         gif = self.BOT_UTILS.getFromComplexList(self.GIFS['responses'], message)
-        if (gif is not None):
-            await self.BOT_UTILS.sendGIF(context.channel, gif)
+        if (gif is not None and len(gif) > 0):
+            for chunk in gif:
+                await self.BOT_UTILS.sendGIF(context.channel, chunk)
             return
 
         ## HUGS

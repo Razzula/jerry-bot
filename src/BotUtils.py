@@ -45,6 +45,7 @@ class Emotes(Enum):
     BONK = Emote('bonk', '<:bonk:798539206901235773>', [], '👎🏿')
     EKKY_DISAPPROVES = Emote('ekky_disapproves', '<:ekkydisapproves:876951860144144454>', [], '👎🏿')
     CARDBOARD = Emote('cardboard', '<:cardboard:1203077387345207448>', ['cardboard'], '📦')
+    TEA = Emote('tea', '<:properBrew:1169702366744956949>', ['tea', 'brew', 'cuppa'], '🫖')
 
     # Steam
     STEAM = Emote('steam', '<:steam:1042900928048681030>', ['steam'], '�')
@@ -52,7 +53,11 @@ class Emotes(Enum):
 
     # Other
     WINDOWS = Emote('windows', '🪟', [])
-    CHEESE = Emote('cheese', '🧀', ['cheese'])
+    CHEESE = Emote('cheese', '🧀', ['cheese', 'raclette', 'fondue'])
+    FONDUE = Emote('fondue', '🫕', ['fondue'])
+    DONKEY = Emote('donkey', '🫏', ['assume'])
+    BAGEL = Emote('bagel', '🐧', ['bagel']) # the emote should be an array ['🐧', '❤️']
+    GENERAL_LOVE = Emote('general_love', '❤️', ['bagel', 'tea', 'raclette'])
 
 class BotUtils:
     """TODO"""
@@ -178,7 +183,16 @@ class BotUtils:
 
         if (isinstance(gifName, list)):
             gifName = random.choice(gifName)
-        return f'https://raw.githubusercontent.com/Razzula/jerry-bot/main/data/static/gifs/{gifName}.gif'
+
+        # check file exists
+        gifPath = os.path.join(self.STATIC_DATA_PATH, 'gifs', f'{gifName}.gif')
+        if (os.path.exists(gifPath)):
+            return f'https://raw.githubusercontent.com/Razzula/jerry-bot/main/data/static/gifs/{gifName}.gif'
+        clipPath = os.path.join(self.STATIC_DATA_PATH, 'clips', f'{gifName}.mp4')
+        if (os.path.exists(clipPath)):
+            return f'https://raw.githubusercontent.com/Razzula/jerry-bot/main/data/static/clips/{gifName}.mp4'
+
+        raise FileNotFoundError(f'GIF or clip not found: {gifName}')
 
     async def sendGIF(self, channel: Any, gifName: str | list[str]):
         """Sends a GIF to the current channel."""
@@ -250,31 +264,50 @@ class BotUtils:
 
         return (len(res) > 0)
 
-    def getFromComplexList(self, complexList: list[Any], message: str) -> str | None:
+    def getFromComplexList(self, complexList: list[Any], message: str) -> list[str] | None:
         """Gets a list from a complex list."""
 
         for entry in complexList:
+            entryType = entry.get('type', 'OR') # default to OR if not specified
+            if (entryType == 'DISABLED'):
+                continue
+
             prompts: list[str] | str = entry.get('input')
             strict = entry.get('strict') if ('strict' in entry) else False
 
             # single prompt
             if (isinstance(prompts, str)):
                 if (prompts in message):
-                    return entry.get('output')
+                    if (entry.get('gif')):
+                        return [
+                            entry.get('output'),
+                            self.getGIF(entry.get('gif'))
+                        ]
+                    return [entry.get('output')]
 
             # multiple prompts
             else:
-                if (entry.get('type') == 'AND'): # AND
+                if (entryType == 'AND'): # AND
                     flag = True
                     for prompt in prompts:
                         if (not self.isSubstring(message, prompt, strict=strict)):
                             flag = False
                     if (flag):
-                        return entry.get('output')
+                        if (entry.get('gif')):
+                            return [
+                                entry.get('output'),
+                                self.getGIF(entry.get('gif'))
+                            ]
+                        return [entry.get('output')]
                 else: # OR
                     for prompt in prompts:
                         if (self.isSubstring(message, prompt, strict=strict)):
-                            return entry.get('output')
+                            if (entry.get('gif')):
+                                return [
+                                    entry.get('output'),
+                                    self.getGIF(entry.get('gif'))
+                                ]
+                            return [entry.get('output')]
         return None
 
     def isSubstring(self, string: str, substr: str, strict = False) -> bool:

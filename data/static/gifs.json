@@ -167,8 +167,12 @@
             "output": "Vengeance"
         },
         {
+            "input": "boblin",
+            "output": ["Boblin!", "BoblinDrum", "BoblinFight", "BoblinSpin"]
+        },
+        {
             "input": "borg",
-            "output": ["HesBeenMyFriendThroughManyDangers", "BreadGang"]
+            "output": ["HesBeenMyFriendThroughManyDangers", "BreadGang", "BorgDance", "BorgJig", "BorgYourOldFriend", "BorgYourOldFriend2", "BorgMusic"]
         },
         {
             "input": "wrex",
@@ -195,7 +199,7 @@
             "output": ["HakunaMatata_1", "HakunaMatata_2", "HakunaMatata_3"]
         },
         {
-            "input": ["going", "gonna", "must", "should"],
+            "input": ["must", "should"],
             "type": "OR",
             "output": "WereItSoEasy"
         },
@@ -231,7 +235,8 @@
         "ESODance",
         "GandalfSax",
         "GandalfParty",
-        "BreadGang"
+        "BreadGang",
+        "BorgJig"
     ],
     "bonks" : [
         "BonkMega",

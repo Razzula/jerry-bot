@@ -10,6 +10,11 @@
         "output": "Is this live?"
     },
     {
+        "input": "treasure",
+        "output": "I am the treasurer of the—",
+        "gif": "TreasurerOfTheGroup"
+    },
+    {
         "input": ["wait", "but wait", "wait a minute"],
         "type": "OR",
         "strict": true,
@@ -25,6 +30,7 @@
     },
     {
         "input": ["i think", "we think"],
+        "type": "DISABLED",
         "output": "Know, or know not. There is no think."
     },
     {
@@ -33,6 +39,7 @@
     },
     {
         "input": ["i assume", "we assume"],
+        "type": "DISABLED",
         "output": "Assume me and you'll become a donkey."
     },
     {
