@@ -126,7 +126,10 @@ class BotUtils:
 
         if (activity is None):
 
-            if (today.weekday() == 4): # FRIDAY
+            if (today.weekday() == 0 and today.hour >= 18):  # MONDAY, post-6pm
+                activityType = discord.ActivityType.playing
+                activity = 'D&D'
+            elif (today.weekday() == 4): # FRIDAY
                 activityType = discord.ActivityType.watching
                 activity = 'cardboard'
             elif (today.weekday() == 6): # SUNDAY

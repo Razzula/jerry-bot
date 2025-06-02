@@ -290,9 +290,9 @@ class JerryCog(CustomCog):
         content = context.content.lower() + ' '
         reg = re.search(rf'{trigger} (me|.*?)[ .]', content)
 
-        if (reg is None):
-            await context.channel.send(f'{trigger.title()} you of what?')
-            return
+        # if (reg is None):
+        #     await context.channel.send(f'{trigger.title()} you of what?')
+        #     return
 
         target = reg.group(1)
         perspective = 'B'
