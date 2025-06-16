@@ -304,7 +304,7 @@ class JerryCoreCog(CustomCog):
                     return
 
             ## DANCE
-            for trigger in ['danc', 'party', 'boog', 'whoo', 'woo', 'celebr']:
+            for trigger in ['danc', 'party', 'boog', 'whoo', 'woop', 'celebr']:
                 if (trigger in message):
                     await self.callCommand('JerryCog', JerryCog.dance, context)
                     return
