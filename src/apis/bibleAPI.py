@@ -195,7 +195,7 @@ class BibleAPI:
         text = text.upper()
 
         # detect references
-        pattern = re.compile(r'(?:(?:(?:I+|[123]+?)?\s*)(?:[A-Za-z]+)\.? *|(?<=[;,])) ?\d+(?::\s*\d+(?:\s*-\s*\d+)?|-\d+)?')
+        pattern = re.compile(r'(?<!\S)(?:(?:(?:I+|[123]+?)?\s*)(?:[A-Za-z]+)\.? *|(?<=[;,])) ?\d+(?::\s*\d+(?:\s*-\s*\d+)?|-\d+)?(?![A-Za-z0-9])')
         matches = re.findall(pattern, text)
 
         if (not matches): # no references found
