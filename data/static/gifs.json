@@ -200,7 +200,7 @@
         },
         {
             "input": ["must", "should"],
-            "type": "OR",
+            "type": "DISABLED",
             "output": "WereItSoEasy"
         },
         {
