@@ -265,5 +265,9 @@
         "CatsHug",
         "BearsHug",
         "MagnetHug"
+    ],
+    "welcomes": [
+        "WelcomeMyLords",
+        "HelloThere"
     ]
 }

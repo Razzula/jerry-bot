@@ -143,6 +143,16 @@ class JerryCog(CustomCog):
                                     await channel.send(self.BOT_UTILS.getGIF(gifName))
 
                         self.DB_MANAGER.removeFromCache(self.COG_NAME, 'presenceWaitlist', str(userAfter.id))
+    
+    @commands.Cog.listener()
+    async def on_member_join(self, member):
+        """Sends a random greeting GIF."""
+        if (member.bot):
+            return
+
+        channel = member.guild.system_channel
+        if (channel):
+            await self.BOT_UTILS.sendGIF(channel, random.choice(self.GIFS['welcomes']))
 
     @commands.command(name='party')
     async def dance(self, context: Any, *_args):
