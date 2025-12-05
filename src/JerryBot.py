@@ -272,11 +272,19 @@ class JerryCoreCog(CustomCog):
         ## REMINDERS
         for keyword in ['remind', 'ask', 'tell']:
             if (keyword in message):
-                await self.callCommand('JerryCog', JerryCog.setReminder, context, keyword)
-                return
+                reminder = await self.callCommand('JerryCog', JerryCog.setReminder, context, True, keyword)
+                if (reminder is not None):
+                    return
 
         for name in self.BOT_ALIASES: # jerry, ...
             if (name in message):
+                
+                ## REMINDERS
+                for keyword in ['remind', 'ask', 'tell']:
+                    if (keyword in message):
+                        reminder = await self.callCommand('JerryCog', JerryCog.setReminder, context, False, keyword)
+                        if (reminder is not None):
+                            return
 
                 ## BONK
                 if ('bonk' in message):

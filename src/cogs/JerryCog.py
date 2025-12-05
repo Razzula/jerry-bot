@@ -291,7 +291,7 @@ class JerryCog(CustomCog):
         else:  # no user specified
             await self.BOT_UTILS.reactWithEmoteStr(context, '❓')
 
-    async def setReminder(self, context: Any, *args):
+    async def setReminder(self, context: Any, mustTargetSelf: bool, *args):
         """TODO"""
 
         trigger = args[0] if (len(args) > 0) else 'remind'
@@ -305,6 +305,8 @@ class JerryCog(CustomCog):
         #     return
 
         target = reg.group(1)
+        if (mustTargetSelf and target != 'me'):
+            return None
         perspective = 'B'
         if (target in ['me', None]):
             target = context.author.mention
