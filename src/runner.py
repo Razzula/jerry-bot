@@ -7,6 +7,7 @@ import os
 import platform
 import signal
 import subprocess
+import sys
 from threading import Thread
 import textwrap
 from typing import Final
@@ -69,7 +70,7 @@ class Server:
 
         python = 'python3' if (platform.system() == 'Linux') else 'python'
 
-        command = [python, '-m', 'uvicorn', 'src.server:server', '--host', '0.0.0.0', '--port', SERVER_PORT]
+        command = [sys.executable, '-m', 'uvicorn', 'src.server:server', '--host', '0.0.0.0', '--port', SERVER_PORT]
         if (self.DEBUG_MODE):
             command.append('--reload')
         self.process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1, universal_newlines=True)
