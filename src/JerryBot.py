@@ -23,6 +23,7 @@ from src.cogs.JerryCog import JerryCog
 from src.cogs.SteamCog import SteamCog
 from src.cogs.TagCog import TagCog
 from src.cogs.NerdBotCog import NerdBotCog
+from src.cogs.MinecraftCog import MinecraftCog
 from src.logger import Logger
 
 load_dotenv('tokens.env')
@@ -64,6 +65,7 @@ class JerryBot:
             SteamCog(self.BOT, self.LOGGER, self.BOT_UTILS, self.DB_MANAGER, os.environ.get('STEAM_API_KEY')),
             TagCog(self.BOT, self.LOGGER, self.BOT_UTILS, self.GIFS),
             NerdBotCog(self.BOT, self.LOGGER, self.BOT_UTILS, self.GIFS),
+            MinecraftCog(self.BOT, self.LOGGER, self.BOT_UTILS),
         ]
 
     @classmethod

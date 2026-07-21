@@ -7,3 +7,4 @@ redis==5.0.3
 uvicorn==0.29.0
 python-dateutil
 requests
+mcstatus
