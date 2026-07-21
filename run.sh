@@ -29,4 +29,4 @@ else
 fi
 
 echo "Launching bot..."
-python3 src/runner.py
+.venv/bin/python src/runner.py
