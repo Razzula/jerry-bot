@@ -68,9 +68,16 @@ class Server:
     def serve(self):
         """Start the FastAPI server."""
 
-        python = 'python3' if (platform.system() == 'Linux') else 'python'
-
-        command = [sys.executable, '-m', 'uvicorn', 'src.server:server', '--host', '0.0.0.0', '--port', SERVER_PORT]
+        command = [
+            sys.executable,
+            '-m',
+            'uvicorn',
+            'src.server:server',
+            '--host',
+            '0.0.0.0',
+            '--port',
+            SERVER_PORT,
+        ]
         if (self.DEBUG_MODE):
             command.append('--reload')
         self.process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1, universal_newlines=True)
@@ -148,7 +155,7 @@ async def runner():
         server.serve()
         thread.start()
 
-        await asyncio.sleep(10)
+        # await asyncio.sleep(10)
         # then, perform a health check on the server
         connection, _ = await ping(f'http://localhost:{SERVER_PORT}/test')
         if (not connection):

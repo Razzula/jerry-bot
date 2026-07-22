@@ -29,4 +29,5 @@ else
 fi
 
 echo "Launching bot..."
-.venv/bin/python src/runner.py
+export PYTHONUNBUFFERED=1
+exec .venv/bin/python src/runner.py

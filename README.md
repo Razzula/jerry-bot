@@ -27,8 +27,12 @@ Included are:
 
 ### Prerequisites
 
-1. Python 3.8.5 or later is required to run this bot.
-    - The required Python packages can be installed using `pip install -r requirements.txt`.
+1. `python3.12`
+    - `sudo apt install python3.12`
+    - `python3.12 -m venv .venv`
+    - `source .venv/bin/activate`
+    - `pip install --upgrade pip`
+    - `pip install -r requirements.txt`
 
 2. Your own Discord bot is required to run this.
     - You can create a new bot at the [Discord Developer Portal](https://discord.com/developers/applications).
@@ -46,7 +50,7 @@ Included are:
         - Message Content Intent
 
 3. As well as storing data in an SQLite3 file, this bot also uses Redis for caching. Redis is only available on Linux. If you are planning to run this bot on Windows, you can use WSL2 or a VM to run the bot on a Linux environment. This step is optional, but recommended for better performance.
-    - `sudo apt-get install redis-server`
+    - `sudo apt install redis-server`
 
 ### Configuration
 

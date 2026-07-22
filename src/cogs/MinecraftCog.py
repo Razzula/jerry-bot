@@ -29,18 +29,23 @@ class MinecraftCog(CustomCog):
         self.BOT: Final[commands.Bot] = bot
         self.BOT_UTILS: Final[BotUtils] = botUtils
 
-        self.minecraftPoll.start()
+    @commands.Cog.listener()
+    async def on_ready(self):
+        if not self.minecraftPoll.is_running():
+            self.minecraftPoll.start()
 
-    def cog_unload(self):
-        self.minecraftPoll.cancel()
+    async def cog_unload(self):
+        if self.minecraftPoll.is_running():
+            self.minecraftPoll.cancel()
 
-    @tasks.loop(minutes=1)
+    @tasks.loop(seconds=10)
     async def minecraftPoll(self):
-        server = JavaServer.lookup("DNBeancraft.exaroton.me")
-
+        """Poll the Minecraft server for status and update bot presence."""
         try:
-            status = server.status()
+            server = JavaServer.lookup("dnbeancraft.exaroton.me")
+            status = await asyncio.to_thread(server.status)
 
+            # print(status.players)
             if status.players.online and status.players.online > 0:
                 players = status.players.online
 
@@ -53,6 +58,7 @@ class MinecraftCog(CustomCog):
                 return
 
         except Exception as e:
+            # print(e)
             self.LOGGER.error(f'Minecraft status failed: {e}')
 
         # Restore normal activity
@@ -68,3 +74,7 @@ class MinecraftCog(CustomCog):
     @minecraftPoll.before_loop
     async def beforeMinecraftPoll(self):
         await self.BOT.wait_until_ready()
+
+    @minecraftPoll.error
+    async def minecraftPollError(self, error):
+        print("Minecraft loop crashed:", repr(error))
