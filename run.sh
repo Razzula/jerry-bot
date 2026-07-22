@@ -11,13 +11,13 @@ if git rev-list --count --left-only "@{u}"...HEAD > /dev/null; then
     # pip_install_needed=false
 
     # file_to_check="requirements.txt"
-    # if git diff --quiet origin/master..HEAD -- "$file_to_check"; then
+    # if git diff --quiet origin/main..HEAD -- "$file_to_check"; then
     #     echo "File $file_to_check is already up-to-date. No dependencies to install."
     # else
     #     pip_install_needed=true
     # fi
 
-    git pull origin master
+    git pull origin main
     echo "Successfully pulled the latest changes."
 
     # if [ "$pip_install_needed" = true ]; then
