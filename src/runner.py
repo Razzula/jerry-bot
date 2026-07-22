@@ -155,7 +155,7 @@ async def runner():
         server.serve()
         thread.start()
 
-        # await asyncio.sleep(10)
+        await asyncio.sleep(15)
         # then, perform a health check on the server
         connection, _ = await ping(f'http://localhost:{SERVER_PORT}/test')
         if (not connection):

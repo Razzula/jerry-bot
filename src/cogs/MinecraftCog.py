@@ -38,7 +38,7 @@ class MinecraftCog(CustomCog):
         if self.minecraftPoll.is_running():
             self.minecraftPoll.cancel()
 
-    @tasks.loop(seconds=10)
+    @tasks.loop(seconds=30)
     async def minecraftPoll(self):
         """Poll the Minecraft server for status and update bot presence."""
         try:
